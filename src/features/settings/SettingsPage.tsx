@@ -3,6 +3,7 @@ import { BackHeader } from '@/components/BackHeader'
 import { Card, Field } from '@/components/ui'
 import { setSetting, useSettings, type Settings } from '@/db/settings'
 import { cn } from '@/lib/cn'
+import { BackupCard } from './BackupCard'
 
 const themes: { v: Settings['theme']; label: string; icon: typeof Sun }[] = [
   { v: 'dark', label: 'Gelap', icon: Moon },
@@ -50,7 +51,7 @@ export function SettingsPage() {
         </div>
       </Card>
 
-      <p className="px-1 text-xs text-faint">Pengaturan timer, pengingat, dan ekspor/impor menyusul di tahap berikutnya.</p>
+      <BackupCard />
     </div>
   )
 }

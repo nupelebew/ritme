@@ -41,19 +41,20 @@ export const CATEGORY_ICONS: Record<string, LucideIcon> = {
 
 export const iconFor = (name?: string): LucideIcon => CATEGORY_ICONS[name ?? ''] ?? Sparkles
 
+/** Lima pertama = palet kategori bawaan yang lolos validasi (kontras & buta warna) di mode gelap */
 export const PALETTE = [
   '#8b5cf6',
+  '#0891b2',
+  '#d97706',
+  '#16a34a',
+  '#c026d3',
   '#6366f1',
-  '#22d3ee',
   '#0ea5e9',
-  '#34d399',
-  '#a3e635',
-  '#f59e0b',
-  '#fb923c',
-  '#f472b6',
-  '#fb7185',
-  '#e879f9',
-  '#94a3b8',
+  '#65a30d',
+  '#ea580c',
+  '#e11d48',
+  '#db2777',
+  '#64748b',
 ]
 
 /** Warna hex -> rgba dengan alpha */
