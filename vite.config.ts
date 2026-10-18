@@ -9,6 +9,7 @@ const base = process.env.BASE ?? '/'
 
 export default defineConfig({
   base,
+  define: { __APP_VERSION__: JSON.stringify(process.env.npm_package_version ?? '1.0.0') },
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   plugins: [
     react(),

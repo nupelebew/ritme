@@ -14,6 +14,8 @@ export interface Settings {
   /** Jam (0-23) pengingat malam untuk merencanakan besok */
   eveningReminderHour: number
   notifications: boolean
+  /** Menit sebelum kegiatan untuk pengingat; 0 = mati */
+  eventReminderMin: number
   name: string
 }
 
@@ -28,6 +30,7 @@ export const DEFAULT_SETTINGS: Settings = {
   routines: '',
   eveningReminderHour: 20,
   notifications: false,
+  eventReminderMin: 10,
   name: '',
 }
 

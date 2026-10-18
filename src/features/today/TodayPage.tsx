@@ -10,6 +10,7 @@ import { useCategories } from '@/db/hooks'
 import { useSettings } from '@/db/settings'
 import type { DateKey, Task } from '@/db/types'
 import { HabitStrip } from '@/features/habits/HabitStrip'
+import { EveningBanner } from '@/features/reminders/EveningBanner'
 import { totalMin, useSessionsOn } from '@/features/focus/useSessions'
 import { TaskSheet } from '@/features/tasks/TaskSheet'
 import { TopThree } from '@/features/tasks/TopThree'
@@ -78,6 +79,8 @@ export function TodayPage() {
         }
       />
       <p className="-mt-4 text-sm text-muted">{fmt(date, 'EEEE, d MMMM yyyy')}</p>
+
+      {isToday && <EveningBanner />}
 
       <DayStrip value={date} onChange={setDate} />
 

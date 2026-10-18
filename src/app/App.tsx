@@ -1,5 +1,5 @@
 import { Route, Routes, useLocation } from 'react-router'
-import { useEffect } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { BottomNav } from './BottomNav'
 import { UpdatePrompt } from './UpdatePrompt'
 import { useApplyTheme } from './useTheme'
@@ -9,18 +9,23 @@ import { TasksPage } from '@/features/tasks/TasksPage'
 import { FocusPage } from '@/features/focus/FocusPage'
 import { FocusPill } from '@/features/focus/FocusPill'
 import { useFocusEngine } from '@/features/focus/focus'
+import { useReminders } from '@/features/reminders/useReminders'
+import '@/lib/install'
 import { HabitsPage } from '@/features/habits/HabitsPage'
 import { MorePage } from '@/features/more/MorePage'
-import { PlanPage } from '@/features/plan/PlanPage'
-import { ReviewPage } from '@/features/review/ReviewPage'
-import { StatsPage } from '@/features/stats/StatsPage'
-import { HistoryPage } from '@/features/stats/HistoryPage'
-import { CategoriesPage } from '@/features/settings/CategoriesPage'
-import { SettingsPage } from '@/features/settings/SettingsPage'
+
+// Halaman yang jarang dibuka dimuat terpisah (tetap di-precache untuk offline)
+const PlanPage = lazy(() => import('@/features/plan/PlanPage').then((m) => ({ default: m.PlanPage })))
+const ReviewPage = lazy(() => import('@/features/review/ReviewPage').then((m) => ({ default: m.ReviewPage })))
+const StatsPage = lazy(() => import('@/features/stats/StatsPage').then((m) => ({ default: m.StatsPage })))
+const HistoryPage = lazy(() => import('@/features/stats/HistoryPage').then((m) => ({ default: m.HistoryPage })))
+const CategoriesPage = lazy(() => import('@/features/settings/CategoriesPage').then((m) => ({ default: m.CategoriesPage })))
+const SettingsPage = lazy(() => import('@/features/settings/SettingsPage').then((m) => ({ default: m.SettingsPage })))
 
 export function App() {
   useApplyTheme()
   useFocusEngine()
+  useReminders()
   const { pathname } = useLocation()
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -38,6 +43,7 @@ export function App() {
       <UpdatePrompt />
       <FocusPill />
       <main className="mx-auto min-h-dvh w-full max-w-2xl px-4 pb-32 pt-safe">
+        <Suspense fallback={<div className="py-20 text-center text-sm text-faint">Memuat…</div>}>
         <Routes>
           <Route path="/" element={<TodayPage />} />
           <Route path="/tugas" element={<TasksPage />} />
@@ -52,6 +58,7 @@ export function App() {
           <Route path="/pengaturan" element={<SettingsPage />} />
           <Route path="*" element={<TodayPage />} />
         </Routes>
+        </Suspense>
       </main>
       <BottomNav />
     </ToastProvider>
