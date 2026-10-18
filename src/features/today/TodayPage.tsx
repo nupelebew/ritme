@@ -8,7 +8,10 @@ import { db } from '@/db/db'
 import { eventsForDate, updateOccurrence } from '@/db/events'
 import { useCategories } from '@/db/hooks'
 import { useSettings } from '@/db/settings'
-import type { DateKey } from '@/db/types'
+import type { DateKey, Task } from '@/db/types'
+import { TaskSheet } from '@/features/tasks/TaskSheet'
+import { TopThree } from '@/features/tasks/TopThree'
+import { useTasks, useToggleTask } from '@/features/tasks/useTasks'
 import { fmt, greeting, nowMinutes, todayKey } from '@/lib/date'
 import type { Occurrence } from '@/lib/schedule'
 import { useNow } from '@/lib/useNow'
@@ -33,6 +36,9 @@ export function TodayPage() {
   const items = useLiveQuery(() => eventsForDate(db, date), [date])
   const [editing, setEditing] = useState<Occurrence | null>(null)
   const [draft, setDraft] = useState<EventDraft | null>(null)
+  const tasks = useTasks()
+  const toggleTask = useToggleTask()
+  const [openTask, setOpenTask] = useState<Task | null>(null)
 
   // Perluas rentang jam bila ada kegiatan di luar jam aktif
   const startHour = Math.min(settings.dayStartHour, ...(items ?? []).map((o) => Math.floor(o.start / 60)))
@@ -82,6 +88,18 @@ export function TodayPage() {
         />
       )}
 
+      {isToday && tasks.ready && (
+        <TopThree
+          ranked={tasks.ranked.slice(0, 3)}
+          doneToday={tasks.doneToday}
+          categories={categories}
+          today={today}
+          onToggle={toggleTask}
+          onOpen={setOpenTask}
+          showLink
+        />
+      )}
+
       <section aria-label="Timeline" className="glass rounded-3xl px-3 pb-2 pt-5">
         {items && items.length === 0 && (
           <EmptyState
@@ -109,6 +127,7 @@ export function TodayPage() {
         Tambah kegiatan
       </Fab>
 
+      {openTask && <TaskSheet key={openTask.id} task={openTask} onClose={() => setOpenTask(null)} />}
       {editing && <EventSheet key={editing.key} occurrence={editing} onClose={() => setEditing(null)} />}
       {draft && <EventSheet key={`new-${draft.start}`} draft={draft} onClose={() => setDraft(null)} />}
     </div>
