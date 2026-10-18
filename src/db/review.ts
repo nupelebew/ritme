@@ -41,7 +41,7 @@ export async function gatherWeek(start: DateKey, today: DateKey): Promise<WeekDa
       plannedMin: occ[i].reduce((a, o) => a + o.end - o.start, 0),
       tasksDone: tasksDone.filter((t) => t.doneAt! >= dayStart && t.doneAt! < dayStart + 86_400_000).length,
       mood: row?.mood,
-      note: row?.note,
+      note: [row?.note, row?.reflection?.good && `baik: ${row.reflection.good}`, row?.reflection?.block && `hambatan: ${row.reflection.block}`].filter(Boolean).join(' · ') || undefined,
     }
   })
 

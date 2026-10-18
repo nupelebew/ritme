@@ -12,6 +12,7 @@ import { useFocusEngine } from '@/features/focus/focus'
 import { useReminders } from '@/features/reminders/useReminders'
 import { useAgenda } from '@/features/reminders/useAgenda'
 import { ShareSheet } from '@/features/share/ShareSheet'
+import { BadgeWatcher } from '@/features/badges/useAchievements'
 import '@/lib/install'
 import { HabitsPage } from '@/features/habits/HabitsPage'
 import { MorePage } from '@/features/more/MorePage'
@@ -29,6 +30,8 @@ const SearchPage = lazy(() => import('@/features/search/SearchPage').then((m) =>
 const ThesisPage = lazy(() => import('@/features/thesis/ThesisPage').then((m) => ({ default: m.ThesisPage })))
 const FreelancePage = lazy(() => import('@/features/freelance/FreelancePage').then((m) => ({ default: m.FreelancePage })))
 const CouplePage = lazy(() => import('@/features/couple/CouplePage').then((m) => ({ default: m.CouplePage })))
+const BadgesPage = lazy(() => import('@/features/badges/BadgesPage').then((m) => ({ default: m.BadgesPage })))
+const WrappedPage = lazy(() => import('@/features/badges/WrappedPage').then((m) => ({ default: m.WrappedPage })))
 const TrashPage = lazy(() => import('@/features/settings/TrashPage').then((m) => ({ default: m.TrashPage })))
 
 export function App() {
@@ -56,6 +59,7 @@ export function App() {
       <UpdatePrompt />
       <FocusPill />
       <ShareSheet />
+      <BadgeWatcher />
       <main className="mx-auto min-h-dvh w-full max-w-2xl px-4 pb-32 pt-safe">
         <Suspense fallback={<div className="py-20 text-center text-sm text-faint">Memuat…</div>}>
         <Routes>
@@ -75,6 +79,8 @@ export function App() {
           <Route path="/skripsi" element={<ThesisPage />} />
           <Route path="/freelance" element={<FreelancePage />} />
           <Route path="/bareng" element={<CouplePage />} />
+          <Route path="/lencana" element={<BadgesPage />} />
+          <Route path="/wrapped" element={<WrappedPage />} />
           <Route path="*" element={<TodayPage />} />
         </Routes>
         </Suspense>

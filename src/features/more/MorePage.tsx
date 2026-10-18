@@ -1,5 +1,6 @@
 import { Link } from 'react-router'
 import {
+  Award,
   BarChart3,
   Briefcase,
   CalendarDays,
@@ -37,6 +38,7 @@ const groups: { title: string; items: { to: string; label: string; desc: string;
     items: [
       { to: '/statistik', label: 'Statistik', desc: 'Jam fokus, tugas selesai, tren, heatmap', icon: BarChart3, tint: 'var(--accent-3)' },
       { to: '/riwayat', label: 'Riwayat & mood', desc: 'Catatan harian dan mood 1–5', icon: CalendarDays, tint: '#f472b6' },
+      { to: '/lencana', label: 'Lencana & level', desc: 'XP, lencana, dan Ritme Wrapped bulanan', icon: Award, tint: '#fbbf24' },
     ],
   },
   {

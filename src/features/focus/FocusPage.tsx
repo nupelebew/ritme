@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ChevronRight, Minus, Pause, Play, Plus, RotateCcw, Settings2, SkipForward, Target, Timer, Trash2, Zap } from 'lucide-react'
-import { Button, Card, Chip, IconButton, PageHeader, Sheet } from '@/components/ui'
+import { ChevronRight, Eye, Headphones, Minus, Pause, Play, Plus, RotateCcw, Settings2, SkipForward, Target, Timer, Trash2, Zap } from 'lucide-react'
+import { Button, Card, Chip, IconButton, PageHeader, Sheet, Toggle } from '@/components/ui'
 import { useToast } from '@/components/Toast'
 import { db } from '@/db/db'
 import { FALLBACK_CATEGORY, useCategories } from '@/db/hooks'
@@ -11,12 +11,22 @@ import { durationLabel, fmt, minToHHMM, nowMinutes, todayKey } from '@/lib/date'
 import type { Phase } from '@/lib/focusStore'
 import { iconFor } from '@/lib/icons'
 import { unlockAudio } from '@/lib/notify'
+import { playNoise } from '@/lib/noise'
+import type { NoiseKind } from '@/db/settings'
 import { useNow } from '@/lib/useNow'
 import { cn } from '@/lib/cn'
 import { useTasks } from '@/features/tasks/useTasks'
 import { focusStore, mmss, PHASE_LABEL, useFocusState } from './focus'
 import { FocusRing } from './FocusRing'
 import { totalMin, useSessionsOn } from './useSessions'
+
+const NOISES: { v: NoiseKind; label: string }[] = [
+  { v: 'off', label: 'Hening' },
+  { v: 'rain', label: '🌧 Hujan' },
+  { v: 'brown', label: 'Cokelat' },
+  { v: 'pink', label: 'Pink' },
+  { v: 'white', label: 'Putih' },
+]
 
 export function FocusPage() {
   const s = useFocusState()
@@ -28,6 +38,19 @@ export function FocusPage() {
   useNow(s.status === 'running' ? 250 : 30_000)
   const [picker, setPicker] = useState(false)
   const [config, setConfig] = useState(false)
+
+  // Hitung mundur 20 detik saat pengingat istirahat mata muncul
+  const [eyeBreak, setEyeBreak] = useState(0)
+  useEffect(() => {
+    const on = () => setEyeBreak(20)
+    window.addEventListener('ritme:eyebreak', on)
+    return () => window.removeEventListener('ritme:eyebreak', on)
+  }, [])
+  useEffect(() => {
+    if (!eyeBreak) return
+    const id = setTimeout(() => setEyeBreak((n) => n - 1), 1000)
+    return () => clearTimeout(id)
+  }, [eyeBreak])
 
   // Dari tombol notifikasi / pintasan ikon: ?mulai=<idTugas> atau ?mulai=1
   const [params, setParams] = useSearchParams()
@@ -147,6 +170,39 @@ export function FocusPage() {
           </Button>
         </div>
       )}
+
+      {eyeBreak && (
+        <div className="flex items-center gap-3 rounded-2xl border border-accent-2/40 bg-accent-2/10 px-3.5 py-2.5 text-sm animate-rise" role="status">
+          <Eye className="size-5 shrink-0 text-accent-2" aria-hidden />
+          <span className="flex-1">Istirahat mata: lihat sesuatu sejauh ±6 meter selama 20 detik.</span>
+          <span className="font-display text-lg font-semibold tabular-nums">{eyeBreak}</span>
+        </div>
+      )}
+
+      {/* Suasana */}
+      <Card className="space-y-2 p-3.5">
+        <div className="flex items-center gap-2 text-[13px] font-medium text-muted">
+          <Headphones className="size-4" aria-hidden /> Suara latar
+        </div>
+        <div role="radiogroup" aria-label="Suara latar" className="flex flex-wrap gap-1.5">
+          {NOISES.map((n) => (
+            <Chip
+              key={n.v}
+              active={settings.noise === n.v}
+              className="min-h-10 px-3 text-[13px]"
+              onClick={() => {
+                // langsung dari ketukan supaya browser mengizinkan audio
+                unlockAudio()
+                if (running && isFocus) playNoise(n.v)
+                void setSetting('noise', n.v)
+              }}
+            >
+              {n.label}
+            </Chip>
+          ))}
+        </div>
+        <Toggle label="Istirahat mata 20-20-20" hint="Tiap 20 menit fokus: lihat ±6 meter selama 20 detik." checked={settings.eyeBreak} onChange={(v) => setSetting('eyeBreak', v)} />
+      </Card>
 
       {/* Target sesi */}
       <button type="button" onClick={() => setPicker(true)} className="glass flex w-full items-center gap-3 rounded-3xl p-3 text-left transition hover:bg-white/5">

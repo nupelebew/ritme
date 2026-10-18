@@ -195,6 +195,14 @@ function DayDetail({ date }: { date: DateKey }) {
           ))}
         </ul>
       )}
+      {(entry?.energy || entry?.reflection) && (
+        <div className="space-y-1 rounded-2xl border border-line p-3 text-sm">
+          {entry?.energy && <p className="text-muted">Energi pagi: <b className="text-ink">{entry.energy}/5</b></p>}
+          {entry?.reflection?.good && <p><span className="text-muted">Berjalan baik:</span> {entry.reflection.good}</p>}
+          {entry?.reflection?.block && <p><span className="text-muted">Hambatan:</span> {entry.reflection.block}</p>}
+          {entry?.reflection?.tomorrow && <p><span className="text-muted">Fokus besok:</span> {entry.reflection.tomorrow}</p>}
+        </div>
+      )}
       {entry?.brainDump && (
         <details>
           <summary className="flex min-h-11 cursor-pointer items-center gap-2 text-[13px] text-muted">

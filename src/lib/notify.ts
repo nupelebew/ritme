@@ -1,5 +1,11 @@
 let ctx: AudioContext | undefined
 
+/** AudioContext bersama (bunyi notifikasi & suara latar) */
+export function audioContext() {
+  ctx ??= new AudioContext()
+  return ctx
+}
+
 /** Panggil dari aksi pengguna (mis. tombol Mulai) supaya browser mengizinkan suara nanti */
 export function unlockAudio() {
   try {

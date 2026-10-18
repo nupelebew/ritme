@@ -77,6 +77,59 @@ export async function renderDayImage(date: DateKey, items: Occurrence[], categor
   return new Promise((res, rej) => c.toBlob((b) => (b ? res(b) : rej(new Error('gagal membuat gambar'))), 'image/png'))
 }
 
+/** Kartu Ritme Wrapped (PNG 1080×1350) */
+export async function renderWrappedImage(monthLabel: string, slides: { big: string; label: string; sub?: string }[], name?: string): Promise<Blob> {
+  const H = 1350
+  const c = document.createElement('canvas')
+  c.width = W
+  c.height = H
+  const g = c.getContext('2d')!
+  await document.fonts?.ready
+  g.fillStyle = '#07070f'
+  g.fillRect(0, 0, W, H)
+  const glow = (x: number, y: number, r: number, col: string) => {
+    const grad = g.createRadialGradient(x, y, 0, x, y, r)
+    grad.addColorStop(0, col)
+    grad.addColorStop(1, 'transparent')
+    g.fillStyle = grad
+    g.fillRect(0, 0, W, H)
+  }
+  glow(900, 160, 700, 'rgba(139,123,255,0.5)')
+  glow(120, 900, 640, 'rgba(34,211,238,0.35)')
+  glow(700, 1300, 600, 'rgba(244,114,182,0.3)')
+
+  const body = (w: number, s: number) => `${w} ${s}px "Plus Jakarta Sans Variable", system-ui, sans-serif`
+  const disp = (s: number) => `600 ${s}px "Space Grotesk Variable", system-ui, sans-serif`
+  g.fillStyle = '#a7a6c2'
+  g.font = body(600, 34)
+  g.fillText(`RITME WRAPPED${name ? ` · ${name.toUpperCase()}` : ''}`, PAD, 130)
+  g.fillStyle = '#f2f1fb'
+  g.font = disp(84)
+  g.fillText(monthLabel, PAD, 230)
+
+  let y = 330
+  for (const s of slides) {
+    g.fillStyle = 'rgba(255,255,255,0.06)'
+    g.beginPath()
+    g.roundRect(PAD, y, W - PAD * 2, 150, 32)
+    g.fill()
+    g.fillStyle = '#a7a6c2'
+    g.font = body(600, 26)
+    g.fillText(s.label.toUpperCase(), PAD + 36, y + 50)
+    g.fillStyle = '#f2f1fb'
+    g.font = disp(56)
+    let big = s.big
+    while (g.measureText(big).width > W - PAD * 2 - 72 && big.length > 4) big = big.slice(0, -2)
+    if (big !== s.big) big = big.trimEnd() + '…'
+    g.fillText(big, PAD + 36, y + 118)
+    y += 166
+  }
+  g.fillStyle = '#6c6b8a'
+  g.font = body(500, 28)
+  g.fillText('dibuat dengan Ritme', PAD, H - 60)
+  return new Promise((res, rej) => c.toBlob((b) => (b ? res(b) : rej(new Error('gagal membuat gambar'))), 'image/png'))
+}
+
 /** Bagikan file lewat menu share HP; cadangan: unduh */
 export async function shareOrDownload(file: File, text?: string) {
   const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean }

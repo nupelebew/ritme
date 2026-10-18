@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { BedDouble, ChevronRight, Target } from 'lucide-react'
-import { Card } from '@/components/ui'
+import { BedDouble, ChevronRight, Moon, ShieldCheck, Target, X } from 'lucide-react'
+import { Button, Card, IconButton } from '@/components/ui'
 import { db } from '@/db/db'
 import { FALLBACK_CATEGORY, useCategories } from '@/db/hooks'
 import { loadWeekProgress } from '@/db/insights'
@@ -103,6 +103,83 @@ export function WeekTargets() {
         })}
       </ul>
     </Card>
+  )
+}
+
+/** Refleksi malam 30 detik: muncul mulai jam 19 kalau belum diisi */
+export function EveningReflection() {
+  const today = todayKey()
+  const now = useNow(60_000)
+  const entry = useLiveQuery(async () => (await db.days.get(today)) ?? null, [today])
+  const [r, setR] = useState({ good: '', block: '', tomorrow: '' })
+  const [saved, setSaved] = useState(false)
+  if (entry === undefined || now.getHours() < 19) return null
+  const has = entry?.reflection && Object.values(entry.reflection).some((v) => v?.trim())
+  if (has || saved) return null
+
+  const save = async () => {
+    await db.transaction('rw', db.days, async () => {
+      const cur = await db.days.get(today)
+      await db.days.put({ ...(cur ?? { date: today }), reflection: { good: r.good.trim() || undefined, block: r.block.trim() || undefined, tomorrow: r.tomorrow.trim() || undefined } })
+    })
+    setSaved(true)
+  }
+  const fields: { k: keyof typeof r; q: string; ph: string }[] = [
+    { k: 'good', q: 'Apa yang berjalan baik hari ini?', ph: 'mis. bab 2 akhirnya rapi' },
+    { k: 'block', q: 'Apa yang menghambat?', ph: 'mis. kebanyakan scroll HP siang' },
+    { k: 'tomorrow', q: 'Besok mau fokus ke apa?', ph: 'mis. kirim draft ke dosbing' },
+  ]
+  return (
+    <Card className="space-y-2.5">
+      <h2 className="flex items-center gap-2 font-display font-semibold">
+        <Moon className="size-4 text-accent" aria-hidden /> Refleksi malam · 30 detik
+      </h2>
+      {fields.map((f) => (
+        <label key={f.k} className="block space-y-1">
+          <span className="text-[13px] text-muted">{f.q}</span>
+          <input className="field" value={r[f.k]} placeholder={f.ph} onChange={(e) => setR({ ...r, [f.k]: e.target.value })} />
+        </label>
+      ))}
+      <Button variant="primary" className="w-full" disabled={!Object.values(r).some((v) => v.trim())} onClick={save}>
+        Simpan refleksi
+      </Button>
+    </Card>
+  )
+}
+
+/** Pengingat cadangan bila sudah > 7 hari belum ekspor JSON */
+export function BackupNudge() {
+  const s = useSettings()
+  const count = useLiveQuery(() => db.tasks.count(), []) ?? 0
+  const [hidden, setHidden] = useState(() => {
+    try {
+      return Number(localStorage.getItem('ritme-backup-snooze') ?? 0) > Date.now()
+    } catch {
+      return false
+    }
+  })
+  const days = s.lastBackupAt ? Math.floor((Date.now() - s.lastBackupAt) / 86_400_000) : Infinity
+  if (hidden || count < 3 || days < 7) return null
+  return (
+    <div className="flex items-center gap-3 rounded-2xl border border-line bg-white/5 px-3.5 py-2 text-[13px]" role="status">
+      <ShieldCheck className="size-5 shrink-0 text-accent-3" aria-hidden />
+      <span className="flex-1">{Number.isFinite(days) ? `Sudah ${days} hari belum cadangan.` : 'Belum pernah cadangan.'} Datamu hanya ada di HP ini.</span>
+      <Link to="/pengaturan" className="min-h-11 content-center rounded-xl px-2 font-semibold text-accent-2 hover:bg-white/5">
+        Cadangkan
+      </Link>
+      <IconButton
+        icon={X}
+        label="Ingatkan 3 hari lagi"
+        onClick={() => {
+          try {
+            localStorage.setItem('ritme-backup-snooze', String(Date.now() + 3 * 86_400_000))
+          } catch {
+            /* abaikan */
+          }
+          setHidden(true)
+        }}
+      />
+    </div>
   )
 }
 

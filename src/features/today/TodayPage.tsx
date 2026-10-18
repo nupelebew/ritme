@@ -22,7 +22,7 @@ import { DayStrip } from './DayStrip'
 import { DaySummary } from './DaySummary'
 import { EventSheet, type EventDraft } from './EventSheet'
 import { Timeline } from './Timeline'
-import { BedtimeWarning, EnergyCheck, SpecialSoon, WeekTargets } from './SmartCards'
+import { BackupNudge, BedtimeWarning, EnergyCheck, EveningReflection, SpecialSoon, WeekTargets } from './SmartCards'
 import { TemplateSheet } from './TemplateSheet'
 import { renderDayImage, shareOrDownload } from '@/lib/shareImage'
 
@@ -93,6 +93,8 @@ export function TodayPage() {
 
       {isToday && <SpecialSoon />}
 
+      {isToday && <BackupNudge />}
+
       <DayStrip value={date} onChange={setDate} />
 
       {items && (
@@ -123,6 +125,8 @@ export function TodayPage() {
       {isToday && <HabitStrip />}
 
       {isToday && <WeekTargets />}
+
+      {isToday && <EveningReflection />}
 
       {items && items.length > 0 && <BedtimeWarning lastEnd={Math.max(...items.map((o) => o.end))} />}
 
