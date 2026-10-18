@@ -7,7 +7,17 @@ export function resolveTheme(t: 'dark' | 'light' | 'system') {
 }
 
 export function useApplyTheme() {
-  const { theme } = useSettings()
+  const { theme, accent } = useSettings()
+  useEffect(() => {
+    if (accent === 'aurora') delete document.documentElement.dataset.accent
+    else document.documentElement.dataset.accent = accent
+    try {
+      localStorage.setItem('ritme-accent', accent)
+    } catch {
+      /* mode privat */
+    }
+  }, [accent])
+
   useEffect(() => {
     const apply = () => {
       const t = resolveTheme(theme)

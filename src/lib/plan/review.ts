@@ -1,4 +1,5 @@
 import type { Category, DateKey, Habit, Task } from '@/db/types'
+import { DEFAULT_ABOUT } from '@/db/settings'
 import { durationLabel, fmt } from '@/lib/date'
 
 export interface WeekDay {
@@ -23,7 +24,7 @@ export interface WeekData {
 
 export const sumValues = (r: Record<string, number>) => Object.values(r).reduce((a, b) => a + b, 0)
 
-export function buildReviewPrompt(w: WeekData, categories: Category[], name?: string): string {
+export function buildReviewPrompt(w: WeekData, categories: Category[], name?: string, about?: string): string {
   const catName = (id: string) => categories.find((c) => c.id === id)?.name ?? 'Lainnya'
   const L: string[] = []
   const focusTotal = sumValues(w.focusByCat)
@@ -31,7 +32,7 @@ export function buildReviewPrompt(w: WeekData, categories: Category[], name?: st
 
   L.push(
     `Tolong bantu aku mengevaluasi minggu ${fmt(w.start, 'd MMM')}–${fmt(w.end, 'd MMM yyyy')}${name ? ` (aku ${name})` : ''}.`,
-    'Konteks: mahasiswa tingkat akhir yang sedang skripsi, baru mulai freelance dengan jam belum tetap, banyak di rumah, dan ingin tetap punya waktu santai serta waktu bareng pasangan.',
+    `Tentang aku: ${(about?.trim() || DEFAULT_ABOUT).replace(/\s*\n+\s*/g, ' ')}`,
     '',
     '## Ringkasan angka',
     `- Total fokus tercatat: ${durationLabel(focusTotal)} dalam ${w.days.filter((d) => d.focusMin > 0).length} hari aktif`,

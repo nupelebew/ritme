@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { useSearchParams } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { CalendarClock, Plus, Undo2 } from 'lucide-react'
+import { CalendarClock, Plus, Search, Undo2 } from 'lucide-react'
 import { Button, EmptyState, Fab, PageHeader } from '@/components/ui'
 import { useToast } from '@/components/Toast'
 import { db } from '@/db/db'
@@ -71,11 +71,16 @@ export function TodayPage() {
         eyebrow={`${greeting(now)}${settings.name ? `, ${settings.name}` : ''} 👋`}
         title={isToday ? 'Hari ini' : fmt(date, 'EEEE')}
         action={
-          !isToday && (
-            <Button size="sm" icon={Undo2} onClick={() => setDate(today)}>
-              Ke hari ini
-            </Button>
-          )
+          <div className="flex items-center gap-1">
+            {!isToday && (
+              <Button size="sm" icon={Undo2} onClick={() => setDate(today)}>
+                Ke hari ini
+              </Button>
+            )}
+            <Link to="/cari" aria-label="Cari" className="grid size-11 place-items-center rounded-2xl text-muted hover:bg-white/8 hover:text-ink">
+              <Search className="size-5" aria-hidden />
+            </Link>
+          </div>
         }
       />
       <p className="-mt-4 text-sm text-muted">{fmt(date, 'EEEE, d MMMM yyyy')}</p>

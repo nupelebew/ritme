@@ -3,6 +3,7 @@ import { createEvent } from './events'
 import type { Task } from './types'
 import { nowMinutes, todayKey } from '@/lib/date'
 import { eventsForDate } from './events'
+import { toTrash } from './trash'
 
 export async function addTask(data: Omit<Task, 'id' | 'createdAt' | 'done' | 'subtasks'> & Partial<Pick<Task, 'subtasks'>>) {
   const task: Task = { subtasks: [], ...data, id: uid(), done: false, createdAt: Date.now() }
@@ -21,8 +22,10 @@ export async function setTaskDone(task: Task, done: boolean) {
 
 export async function deleteTask(task: Task) {
   await db.tasks.delete(task.id)
+  const trashId = await toTrash(db, 'task', task.title, task)
   return async () => {
     await db.tasks.put(task)
+    await db.trash.delete(trashId)
   }
 }
 

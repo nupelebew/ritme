@@ -30,7 +30,7 @@ export function ReviewPage() {
 
   const copy = async () => {
     if (!week) return
-    const ok = await copyText(buildReviewPrompt(week, categories, settings.name || undefined))
+    const ok = await copyText(buildReviewPrompt(week, categories, settings.name || undefined, settings.about))
     toast(ok ? { text: 'Prompt evaluasi tersalin. Tempel ke Claude.', tone: 'success' } : { text: 'Gagal menyalin.', tone: 'error' })
   }
 

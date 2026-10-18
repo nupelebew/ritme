@@ -5,7 +5,7 @@ import { BellRing, ChevronRight, Download, Minus, Monitor, Moon, Palette, Plus, 
 import { BackHeader } from '@/components/BackHeader'
 import { Button, Card, Chip, Field, IconButton, Toggle } from '@/components/ui'
 import { useToast } from '@/components/Toast'
-import { setSetting, useSettings, type Settings } from '@/db/settings'
+import { DEFAULT_ABOUT, setSetting, useSettings, type AccentId, type Settings } from '@/db/settings'
 import { showLocalNotification } from '@/lib/notify'
 import { isIOS, useInstall } from '@/lib/install'
 import { cn } from '@/lib/cn'
@@ -16,6 +16,14 @@ const themes: { v: Settings['theme']; label: string; icon: typeof Sun }[] = [
   { v: 'dark', label: 'Gelap', icon: Moon },
   { v: 'light', label: 'Terang', icon: Sun },
   { v: 'system', label: 'Ikut sistem', icon: Monitor },
+]
+
+const ACCENTS: { id: AccentId; label: string; colors: [string, string] }[] = [
+  { id: 'aurora', label: 'Aurora', colors: ['#8b7bff', '#22d3ee'] },
+  { id: 'sunset', label: 'Senja', colors: ['#ff7a59', '#ffb547'] },
+  { id: 'ocean', label: 'Samudra', colors: ['#5b8cff', '#22d3ee'] },
+  { id: 'forest', label: 'Hutan', colors: ['#34d399', '#a3e635'] },
+  { id: 'sakura', label: 'Sakura', colors: ['#f472b6', '#c084fc'] },
 ]
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -95,6 +103,39 @@ export function SettingsPage() {
                 >
                   <Icon className="size-5" aria-hidden />
                   {label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <Field
+            label="Tentang saya"
+            hint="Dipakai di prompt AI (rencana & rekap) supaya sarannya pas. Kosongkan untuk memakai deskripsi bawaan."
+          >
+            <textarea
+              className="field min-h-24 resize-y text-sm"
+              defaultValue={s.about}
+              key={`about-${s.about.length}`}
+              placeholder={DEFAULT_ABOUT}
+              onBlur={(e) => setSetting('about', e.target.value.trim())}
+            />
+          </Field>
+          <div className="space-y-1.5">
+            <span className="text-[13px] font-medium text-muted">Warna aksen</span>
+            <div role="radiogroup" aria-label="Warna aksen" className="flex flex-wrap gap-2">
+              {ACCENTS.map((a) => (
+                <button
+                  key={a.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={s.accent === a.id}
+                  onClick={() => setSetting('accent', a.id)}
+                  className={cn(
+                    'flex min-h-11 items-center gap-2 rounded-full border px-3 text-sm transition',
+                    s.accent === a.id ? 'border-ink/60 bg-white/10' : 'border-line text-muted hover:text-ink',
+                  )}
+                >
+                  <span className="size-4 rounded-full" style={{ background: `linear-gradient(120deg, ${a.colors[0]}, ${a.colors[1]})` }} aria-hidden />
+                  {a.label}
                 </button>
               ))}
             </div>

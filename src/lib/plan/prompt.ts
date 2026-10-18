@@ -1,4 +1,5 @@
 import type { Category, DateKey, Habit } from '@/db/types'
+import { DEFAULT_ABOUT } from '@/db/settings'
 import { durationLabel, fmt, minToHHMM, shiftKey } from '@/lib/date'
 import { PRIORITY, dueLabel, type Scored } from '@/lib/priority'
 import { recurrenceLabel, type Occurrence } from '@/lib/schedule'
@@ -17,7 +18,19 @@ export interface PlanPromptInput {
   dayEndHour: number
   focusMin: number
   avgFocusMin?: number
+  /** "Tentang saya" dari pengaturan; kosong = deskripsi bawaan */
+  about?: string
+  /** Petunjuk tambahan (energi, target mingguan, jam emas, jam tidur, …) */
+  hints?: string[]
 }
+
+/** Ubah teks "Tentang saya" (paragraf atau per baris) menjadi butir daftar */
+export const aboutLines = (about: string) =>
+  about
+    .split(/\n+|(?<=\.)\s+/)
+    .map((s) => s.replace(/^[-*•]\s*/, '').trim())
+    .filter(Boolean)
+    .map((s) => `- ${s}`)
 
 const EXAMPLE = `{
   "date": "YYYY-MM-DD",
@@ -44,12 +57,11 @@ export function buildPlanPrompt(i: PlanPromptInput): string {
     `Kamu asisten perencana harian yang realistis dan suportif. Tolong susun jadwal untuk ${when ? `${when}, ` : ''}${fmt(i.date, 'EEEE, d MMMM yyyy')}${i.name ? ` untuk ${i.name}` : ''}.`,
     '',
     '## Tentang saya',
-    '- Mahasiswa tingkat akhir yang sedang mengerjakan skripsi.',
-    '- Baru mulai freelance, jam kerjanya belum tetap.',
-    '- Banyak beraktivitas di rumah; butuh waktu santai dan waktu bareng pasangan.',
+    ...aboutLines(i.about?.trim() || DEFAULT_ABOUT),
     `- Jam aktif ${hh(i.dayStartHour)}–${hh(i.dayEndHour)}. Sesi fokus biasanya ${i.focusMin} menit.`,
   )
   if (i.avgFocusMin) push(`- Rata-rata fokus tercatat 7 hari terakhir: ${durationLabel(Math.round(i.avgFocusMin))}/hari.`)
+  if (i.hints?.length) push(...i.hints.map((h) => `- ${h}`))
 
   push('', '## Kategori (pakai persis salah satu nama ini)', ...cats.map((c) => `- ${c.name}`))
 

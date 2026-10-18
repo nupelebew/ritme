@@ -23,7 +23,33 @@ export interface Settings {
   /** Layar tetap menyala selama timer fokus berjalan */
   keepAwake: boolean
   name: string
+  /** "Tentang saya" untuk prompt AI; kosong = deskripsi bawaan */
+  about: string
+  /** Tema warna aksen */
+  accent: AccentId
+  /** Target menit per minggu per kategori (id kategori → menit) */
+  weeklyTargets: Record<string, number>
+  /** Jam tidur target (0–24); 0 = tidak dipakai */
+  bedtimeHour: number
+  /** Ingatkan istirahat mata 20-20-20 saat fokus */
+  eyeBreak: boolean
+  /** Suara latar saat fokus */
+  noise: NoiseKind
+  /** Tanggal target sidang (YYYY-MM-DD) */
+  defenseDate: string
+  /** Kapan terakhir ekspor cadangan (epoch ms) */
+  lastBackupAt: number
+  /** ID kredensial WebAuthn untuk kunci aplikasi; kosong = mati */
+  appLock: string
+  /** Lencana yang sudah terbuka (agar notifikasi lencana tidak berulang) */
+  unlockedBadges: string[]
 }
+
+export type AccentId = 'aurora' | 'sunset' | 'ocean' | 'forest' | 'sakura'
+export type NoiseKind = 'off' | 'white' | 'pink' | 'brown' | 'rain'
+
+export const DEFAULT_ABOUT =
+  'Mahasiswa tingkat akhir yang sedang mengerjakan skripsi. Baru mulai freelance, jam kerjanya belum tetap. Banyak beraktivitas di rumah; butuh waktu santai dan waktu bareng pasangan.'
 
 export const DEFAULT_SETTINGS: Settings = {
   theme: 'dark',
@@ -41,6 +67,16 @@ export const DEFAULT_SETTINGS: Settings = {
   badge: true,
   keepAwake: true,
   name: '',
+  about: '',
+  accent: 'aurora',
+  weeklyTargets: {},
+  bedtimeHour: 0,
+  eyeBreak: false,
+  noise: 'off',
+  defenseDate: '',
+  lastBackupAt: 0,
+  appLock: '',
+  unlockedBadges: [],
 }
 
 export async function getSettings(): Promise<Settings> {

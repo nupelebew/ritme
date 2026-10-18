@@ -4,7 +4,24 @@ import type { DayEntry, FocusSession, Priority, Task } from './types'
 import { parseCSV, toCSV } from '@/lib/csv'
 import { toKey } from '@/lib/date'
 
-export const TABLES = ['categories', 'events', 'tasks', 'habits', 'habitLogs', 'sessions', 'days', 'settings'] as const
+export const TABLES = [
+  'categories',
+  'events',
+  'tasks',
+  'habits',
+  'habitLogs',
+  'sessions',
+  'days',
+  'settings',
+  'milestones',
+  'guidance',
+  'clients',
+  'invoices',
+  'templates',
+  'trash',
+  'specialDates',
+  'dateIdeas',
+] as const
 type TableName = (typeof TABLES)[number]
 
 export const TABLE_LABEL: Record<TableName, string> = {
@@ -16,6 +33,14 @@ export const TABLE_LABEL: Record<TableName, string> = {
   sessions: 'sesi fokus',
   days: 'catatan harian',
   settings: 'pengaturan',
+  milestones: 'milestone skripsi',
+  guidance: 'log bimbingan',
+  clients: 'klien',
+  invoices: 'invoice',
+  templates: 'template hari',
+  trash: 'tempat sampah',
+  specialDates: 'tanggal penting',
+  dateIdeas: 'ide kencan',
 }
 
 const withId = z.object({ id: z.string().min(1) }).passthrough()
@@ -32,13 +57,22 @@ const BackupSchema = z.object({
     sessions: z.array(withId).default([]),
     days: z.array(z.object({ date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) }).passthrough()).default([]),
     settings: z.array(z.object({ key: z.string(), value: z.unknown() }).passthrough()).default([]),
+    // v2 — cadangan v1 tidak punya kolom ini, jadi semuanya opsional
+    milestones: z.array(withId).default([]),
+    guidance: z.array(withId).default([]),
+    clients: z.array(withId).default([]),
+    invoices: z.array(withId).default([]),
+    templates: z.array(withId).default([]),
+    trash: z.array(withId).default([]),
+    specialDates: z.array(withId).default([]),
+    dateIdeas: z.array(withId).default([]),
   }),
 })
 export type Backup = z.infer<typeof BackupSchema>
 
 export async function exportBackup(db: RitmeDB): Promise<Backup> {
   const data = Object.fromEntries(await Promise.all(TABLES.map(async (t) => [t, await db.table(t).toArray()]))) as Backup['data']
-  return { app: 'ritme', version: 1, exportedAt: new Date().toISOString(), data }
+  return { app: 'ritme', version: 2, exportedAt: new Date().toISOString(), data }
 }
 
 export function parseBackup(text: string): { backup?: Backup; error?: string } {

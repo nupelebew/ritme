@@ -58,6 +58,10 @@ export interface Task {
   done: boolean
   doneAt?: number
   createdAt: number
+  /** Tertaut ke milestone skripsi */
+  milestoneId?: string
+  /** Tertaut ke klien freelance (jam fokusnya jadi jam tertagih) */
+  clientId?: string
 }
 
 export interface Habit {
@@ -96,6 +100,102 @@ export interface DayEntry {
   mood?: 1 | 2 | 3 | 4 | 5
   note?: string
   brainDump?: string
+  /** Check-in energi pagi 1–5 */
+  energy?: 1 | 2 | 3 | 4 | 5
+  /** Refleksi malam singkat */
+  reflection?: { good?: string; block?: string; tomorrow?: string }
+}
+
+/* ---------- v2 ---------- */
+
+export interface Milestone {
+  id: string
+  title: string
+  due?: DateKey
+  done: boolean
+  doneAt?: number
+  order: number
+  notes?: string
+}
+
+export interface Revision {
+  id: string
+  text: string
+  taskId?: string
+}
+
+/** Log bimbingan dosen */
+export interface Guidance {
+  id: string
+  date: DateKey
+  lecturer?: string
+  notes?: string
+  revisions: Revision[]
+  createdAt: number
+}
+
+export interface Client {
+  id: string
+  name: string
+  /** Tarif dalam rupiah; per jam atau per proyek */
+  rate?: number
+  rateType: 'hour' | 'project'
+  color: string
+  archived?: boolean
+  createdAt: number
+}
+
+export interface Invoice {
+  id: string
+  clientId: string
+  title: string
+  amount: number
+  status: 'unpaid' | 'paid'
+  date: DateKey
+  due?: DateKey
+  paidAt?: number
+}
+
+export interface TemplateBlock {
+  title: string
+  categoryId: string
+  start: number
+  end: number
+}
+
+export interface DayTemplate {
+  id: string
+  name: string
+  emoji: string
+  blocks: TemplateBlock[]
+  createdAt: number
+}
+
+export interface TrashItem {
+  id: string
+  kind: 'task' | 'event' | 'series' | 'habit'
+  label: string
+  /** Snapshot data yang dihapus (bisa beberapa baris untuk satu seri) */
+  data: unknown
+  deletedAt: number
+}
+
+/** Tanggal penting: anniversary, ulang tahun, dll. */
+export interface SpecialDate {
+  id: string
+  title: string
+  emoji: string
+  /** YYYY-MM-DD; bila yearly, hanya bulan & tanggal yang dipakai untuk hitung mundur */
+  date: DateKey
+  yearly: boolean
+  createdAt: number
+}
+
+export interface DateIdea {
+  id: string
+  title: string
+  done: boolean
+  createdAt: number
 }
 
 export interface SettingRow {

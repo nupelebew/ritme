@@ -5,8 +5,10 @@ import {
   ChevronRight,
   NotebookPen,
   Palette,
+  Search,
   Settings2,
   Sparkles,
+  Trash2,
   type LucideIcon,
 } from 'lucide-react'
 import { PageHeader } from '@/components/ui'
@@ -29,8 +31,10 @@ const groups: { title: string; items: { to: string; label: string; desc: string;
   {
     title: 'Atur',
     items: [
+      { to: '/cari', label: 'Cari', desc: 'Tugas, kegiatan, catatan, bimbingan', icon: Search, tint: 'var(--accent-2)' },
       { to: '/kategori', label: 'Kategori', desc: 'Ubah nama, warna, dan urutan', icon: Palette, tint: '#f59e0b' },
-      { to: '/pengaturan', label: 'Pengaturan', desc: 'Tema, timer, pengingat, ekspor/impor', icon: Settings2, tint: 'var(--muted)' },
+      { to: '/pengaturan', label: 'Pengaturan', desc: 'Profil, tema, pengingat, ekspor/impor', icon: Settings2, tint: 'var(--muted)' },
+      { to: '/sampah', label: 'Tempat sampah', desc: 'Pulihkan yang terhapus (30 hari)', icon: Trash2, tint: 'var(--faint)' },
     ],
   },
 ]

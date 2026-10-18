@@ -77,6 +77,7 @@ export function PlanPage() {
       dayEndHour: settings.dayEndHour,
       focusMin: settings.focusMin,
       avgFocusMin: avg,
+      about: settings.about,
     })
     const ok = await copyText(prompt)
     toast(

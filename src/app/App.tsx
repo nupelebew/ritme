@@ -15,6 +15,8 @@ import { ShareSheet } from '@/features/share/ShareSheet'
 import '@/lib/install'
 import { HabitsPage } from '@/features/habits/HabitsPage'
 import { MorePage } from '@/features/more/MorePage'
+import { db } from '@/db/db'
+import { purgeTrash } from '@/db/trash'
 
 // Halaman yang jarang dibuka dimuat terpisah (tetap di-precache untuk offline)
 const PlanPage = lazy(() => import('@/features/plan/PlanPage').then((m) => ({ default: m.PlanPage })))
@@ -23,6 +25,8 @@ const StatsPage = lazy(() => import('@/features/stats/StatsPage').then((m) => ({
 const HistoryPage = lazy(() => import('@/features/stats/HistoryPage').then((m) => ({ default: m.HistoryPage })))
 const CategoriesPage = lazy(() => import('@/features/settings/CategoriesPage').then((m) => ({ default: m.CategoriesPage })))
 const SettingsPage = lazy(() => import('@/features/settings/SettingsPage').then((m) => ({ default: m.SettingsPage })))
+const SearchPage = lazy(() => import('@/features/search/SearchPage').then((m) => ({ default: m.SearchPage })))
+const TrashPage = lazy(() => import('@/features/settings/TrashPage').then((m) => ({ default: m.TrashPage })))
 
 export function App() {
   useApplyTheme()
@@ -33,6 +37,9 @@ export function App() {
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [pathname])
+  useEffect(() => {
+    void purgeTrash(db)
+  }, [])
 
   return (
     <ToastProvider>
@@ -60,6 +67,8 @@ export function App() {
           <Route path="/riwayat" element={<HistoryPage />} />
           <Route path="/kategori" element={<CategoriesPage />} />
           <Route path="/pengaturan" element={<SettingsPage />} />
+          <Route path="/cari" element={<SearchPage />} />
+          <Route path="/sampah" element={<TrashPage />} />
           <Route path="*" element={<TodayPage />} />
         </Routes>
         </Suspense>

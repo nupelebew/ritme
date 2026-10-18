@@ -3,6 +3,7 @@ import { uid } from './db'
 import type { DateKey, ScheduleEvent } from './types'
 import type { Occurrence } from '@/lib/schedule'
 import { expandForDate } from '@/lib/schedule'
+import { toTrash } from './trash'
 
 export type Scope = 'one' | 'all'
 export type EventPatch = Partial<Pick<ScheduleEvent, 'title' | 'categoryId' | 'start' | 'end' | 'notes' | 'recurrence' | 'date' | 'taskId'>>
@@ -60,9 +61,12 @@ export async function updateOccurrence(db: RitmeDB, occ: Occurrence, patch: Even
 export async function deleteOccurrence(db: RitmeDB, occ: Occurrence, scope: Scope = 'one'): Promise<() => Promise<void>> {
   if (!occ.masterId) {
     const snapshot = await db.events.get(occ.id)
+    if (!snapshot) return async () => {}
     await db.events.delete(occ.id)
+    const trashId = await toTrash(db, 'event', `${snapshot.title} · ${snapshot.date}`, snapshot)
     return async () => {
-      if (snapshot) await db.events.put(snapshot)
+      await db.events.put(snapshot)
+      await db.trash.delete(trashId)
     }
   }
   const master = await db.events.get(occ.masterId)
@@ -75,7 +79,9 @@ export async function deleteOccurrence(db: RitmeDB, occ: Occurrence, scope: Scop
   }
   const overrides = await db.events.where('seriesId').equals(master.id).toArray()
   await db.events.bulkDelete([master.id, ...overrides.map((o) => o.id)])
+  const trashId = await toTrash(db, 'series', `${master.title} (berulang)`, [master, ...overrides])
   return async () => {
     await db.events.bulkPut([master, ...overrides])
+    await db.trash.delete(trashId)
   }
 }

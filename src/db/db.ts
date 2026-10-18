@@ -1,13 +1,21 @@
 import Dexie, { type EntityTable } from 'dexie'
 import type {
   Category,
+  Client,
+  DateIdea,
   DayEntry,
+  DayTemplate,
   FocusSession,
+  Guidance,
   Habit,
   HabitLog,
+  Invoice,
+  Milestone,
   ScheduleEvent,
   SettingRow,
+  SpecialDate,
   Task,
+  TrashItem,
 } from './types'
 
 export class RitmeDB extends Dexie {
@@ -19,6 +27,15 @@ export class RitmeDB extends Dexie {
   sessions!: EntityTable<FocusSession, 'id'>
   days!: EntityTable<DayEntry, 'date'>
   settings!: EntityTable<SettingRow, 'key'>
+  // v2
+  milestones!: EntityTable<Milestone, 'id'>
+  guidance!: EntityTable<Guidance, 'id'>
+  clients!: EntityTable<Client, 'id'>
+  invoices!: EntityTable<Invoice, 'id'>
+  templates!: EntityTable<DayTemplate, 'id'>
+  trash!: EntityTable<TrashItem, 'id'>
+  specialDates!: EntityTable<SpecialDate, 'id'>
+  dateIdeas!: EntityTable<DateIdea, 'id'>
 
   constructor(name = 'ritme') {
     super(name)
@@ -31,6 +48,18 @@ export class RitmeDB extends Dexie {
       sessions: 'id, date, categoryId, taskId, start',
       days: 'date',
       settings: 'key',
+    })
+    // v2: tabel baru saja; data v1 tidak berubah, jadi tidak perlu .upgrade()
+    this.version(2).stores({
+      tasks: 'id, done, due, categoryId, doneAt, milestoneId, clientId',
+      milestones: 'id, order',
+      guidance: 'id, date',
+      clients: 'id',
+      invoices: 'id, clientId, status, date',
+      templates: 'id',
+      trash: 'id, deletedAt',
+      specialDates: 'id',
+      dateIdeas: 'id',
     })
     this.on('populate', (tx) => {
       tx.table('categories').bulkAdd(DEFAULT_CATEGORIES)

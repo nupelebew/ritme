@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router'
 import { CalendarDays, CheckCircle2, Flag, ListChecks, Plus, Tag, Timer, Wand2 } from 'lucide-react'
 import { Chip, EmptyState, Fab, PageHeader } from '@/components/ui'
 import { useToast } from '@/components/Toast'
+import { db } from '@/db/db'
 import { useCategories } from '@/db/hooks'
 import { addTask } from '@/db/tasks'
 import type { Task } from '@/db/types'
@@ -24,12 +25,23 @@ export function TasksPage() {
   const toast = useToast()
   const [tab, setTab] = useState<'active' | 'done'>('active')
   const [cat, setCat] = useState<string | null>(null)
-  // Pintasan ikon "Tambah tugas" membuka /tugas?baru=1
+  // Pintasan ikon "Tambah tugas" membuka /tugas?baru=1; hasil pencarian membuka /tugas?buka=<id>
   const [params, setParams] = useSearchParams()
   const [open, setOpen] = useState<Task | 'new' | null>(() => (params.get('baru') ? 'new' : null))
+  const bukaId = params.get('buka')
   useEffect(() => {
     if (params.get('baru')) setParams({}, { replace: true })
   }, [params, setParams])
+  useEffect(() => {
+    if (!bukaId) return
+    void db.tasks.get(bukaId).then((t) => {
+      if (t) {
+        setOpen(t)
+        if (t.done) setTab('done')
+      }
+      setParams({}, { replace: true })
+    })
+  }, [bukaId, setParams])
   const [quick, setQuick] = useState('')
 
   const parsed = quick.trim() ? parseQuickAdd(quick, today, categories) : null
