@@ -31,12 +31,28 @@ export function parseQuickAdd(input: string, today: DateKey, categories: Categor
   take(/\s!([1-4])(?=\s)/, (m) => {
     out.priority = Number(m[1]) as Priority
   })
+  // versi ucapan: "prioritas tinggi", "penting banget"
+  if (!out.priority)
+    take(/\s(?:prioritas\s+(rendah|sedang|tinggi|mendesak)|(penting banget|urgent|mendesak))(?=\s)/i, (m) => {
+      const w = (m[1] ?? m[2]).toLowerCase()
+      out.priority = (w === 'rendah' ? 1 : w === 'sedang' ? 2 : w === 'tinggi' ? 3 : 4) as Priority
+    })
+  const findCat = (q: string) => categories.find((x) => x.name.toLowerCase().replace(/\s+/g, '').startsWith(q.toLowerCase().replace(/\s+/g, '')))
   take(/\s#([\p{L}\d_-]+)(?=\s)/u, (m) => {
-    const q = m[1].toLowerCase()
-    const c = categories.find((x) => x.name.toLowerCase().replace(/\s+/g, '').startsWith(q))
+    const c = findCat(m[1])
     if (!c) return false
     out.categoryId = c.id
   })
+  // versi ucapan: "kategori skripsi", "kategori bareng pasangan"
+  if (!out.categoryId)
+    take(/\skategori\s+([\p{L}\d]+(?:\s+[\p{L}\d]+)?)(?=\s)/iu, (m) => {
+      const words = m[1].split(/\s+/)
+      const c = findCat(m[1]) ?? findCat(words[0])
+      if (!c) return false
+      out.categoryId = c.id
+      // kalau hanya kata pertama yang cocok, kembalikan kata kedua ke judul
+      if (!findCat(m[1]) && words[1]) text = text.replace(m[0], ` ${words[1]}`)
+    })
   take(/\s(\d+(?:[.,]\d+)?)\s?(m|mnt|menit|j|jam)(?=\s)/i, (m) => {
     const n = Number(m[1].replace(',', '.'))
     out.estimateMin = Math.round(/^j/i.test(m[2]) ? n * 60 : n)

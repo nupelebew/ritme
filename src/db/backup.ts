@@ -97,7 +97,11 @@ export const countBackup = (b: Backup) => Object.fromEntries(TABLES.map((t) => [
  */
 export async function importBackup(db: RitmeDB, b: Backup, mode: 'merge' | 'replace') {
   const before = await exportBackup(db)
-  await writeAll(db, b, mode)
+  // Kunci aplikasi terikat ke perangkat: jangan ikut diimpor, dan pertahankan milik perangkat ini
+  const lock = await db.settings.get('appLock')
+  await writeAll(db, { ...b, data: { ...b.data, settings: b.data.settings.filter((r) => r.key !== 'appLock') } }, mode)
+  if (lock) await db.settings.put(lock)
+  else await db.settings.delete('appLock')
   return () => writeAll(db, before, 'replace')
 }
 

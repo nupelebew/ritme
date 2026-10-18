@@ -11,6 +11,7 @@ import { isIOS, useInstall } from '@/lib/install'
 import { cn } from '@/lib/cn'
 import { useNotificationsActive } from '@/features/reminders/useReminders'
 import { BackupCard } from './BackupCard'
+import { createLock, lockFlag, lockSupported, markUnlocked, verifyLock } from '@/lib/appLock'
 import { useCategories } from '@/db/hooks'
 
 const themes: { v: Settings['theme']; label: string; icon: typeof Sun }[] = [
@@ -55,6 +56,10 @@ export function SettingsPage() {
   const install = useInstall()
   const hh = (h: number) => `${String(h).padStart(2, '0')}:00`
   const [bgSync, setBgSync] = useState(false)
+  const [lockOk, setLockOk] = useState(false)
+  useEffect(() => {
+    void lockSupported().then(setLockOk)
+  }, [])
   useEffect(() => {
     void periodicSyncSupported().then(setBgSync)
   }, [])
@@ -302,6 +307,35 @@ export function SettingsPage() {
           )}
         </Card>
       </Section>
+
+      {lockOk && (
+        <Section title="Privasi">
+          <Card>
+            <Toggle
+              label="Kunci dengan sidik jari / wajah"
+              hint="Ritme minta verifikasi saat dibuka dan setelah 2 menit di latar. Ini tirai privasi kalau HP dipinjam, bukan enkripsi — tetap cadangkan datamu."
+              checked={!!s.appLock}
+              onChange={async (on) => {
+                try {
+                  if (on) {
+                    const id = await createLock(s.name)
+                    await setSetting('appLock', id)
+                    lockFlag.set(true)
+                    markUnlocked()
+                    toast({ text: 'Kunci aktif. 🔒', tone: 'success' })
+                  } else if (await verifyLock(s.appLock)) {
+                    await setSetting('appLock', '')
+                    lockFlag.set(false)
+                    toast({ text: 'Kunci dimatikan.' })
+                  }
+                } catch {
+                  toast({ text: 'Dibatalkan atau tidak didukung di perangkat ini.', tone: 'error' })
+                }
+              }}
+            />
+          </Card>
+        </Section>
+      )}
 
       <Section title="Data">
         <BackupCard />

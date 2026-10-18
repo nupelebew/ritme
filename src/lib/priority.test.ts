@@ -74,6 +74,19 @@ describe('tambah cepat', () => {
     expect(p).toMatchObject({ title: 'Belajar #figma', estimateMin: 90 })
     expect(p.categoryId).toBeUndefined()
   })
+  it('versi ucapan: "prioritas tinggi", "kategori …", "30 menit"', () => {
+    expect(parseQuickAdd('revisi bab dua besok prioritas tinggi kategori skripsi 30 menit', TODAY, DEFAULT_CATEGORIES)).toEqual({
+      title: 'revisi bab dua',
+      due: '2026-10-19',
+      priority: 3,
+      categoryId: 'skripsi',
+      estimateMin: 30,
+    })
+    expect(parseQuickAdd('nonton kategori bareng pasangan', TODAY, DEFAULT_CATEGORIES)).toMatchObject({ title: 'nonton', categoryId: 'pasangan' })
+    expect(parseQuickAdd('kirim invoice penting banget', TODAY, DEFAULT_CATEGORIES)).toMatchObject({ title: 'kirim invoice', priority: 4 })
+    expect(parseQuickAdd('beli kategori buku', TODAY, DEFAULT_CATEGORIES)).toMatchObject({ title: 'beli kategori buku' })
+  })
+
   it('#pasangan cocok dengan "Bareng Pasangan" lewat awal kata', () => {
     expect(parseQuickAdd('Nonton #bareng', TODAY, DEFAULT_CATEGORIES).categoryId).toBe('pasangan')
   })

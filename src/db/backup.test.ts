@@ -29,6 +29,16 @@ describe('cadangan', () => {
     other.close()
   })
 
+  it('kunci aplikasi tidak ikut diimpor dan milik perangkat ini dipertahankan', async () => {
+    const db = new RitmeDB('test-backup-lock')
+    await db.settings.put({ key: 'appLock', value: 'kunci-hp-ini' })
+    const b = parseBackup(JSON.stringify({ app: 'ritme', version: 2, data: { settings: [{ key: 'appLock', value: 'kunci-hp-lain' }, { key: 'name', value: 'Raka' }] } })).backup!
+    await importBackup(db, b, 'replace')
+    expect((await db.settings.get('appLock'))?.value).toBe('kunci-hp-ini')
+    expect((await db.settings.get('name'))?.value).toBe('Raka')
+    db.close()
+  })
+
   it('gabung mempertahankan data lain & menolak file asing', async () => {
     const db = new RitmeDB('test-backup-3')
     await db.tasks.add({ id: 'a', title: 'A', categoryId: 'skripsi', priority: 2, subtasks: [], done: false, createdAt: 1 })

@@ -19,6 +19,13 @@ Jadwal harian pribadi berbentuk PWA: timeline per jam, tugas dengan "3 hal terpe
 | **Notifikasi agenda** | Satu notifikasi "Agenda hari ini" yang menetap dan selalu terbarui: kegiatan sekarang/berikutnya, 3 tugas penting, kebiasaan yang belum dicentang. Tombol **✓ Selesai** mencentang tugas teratas tanpa membuka aplikasi, **⏱ Mulai fokus** langsung menjalankan timer. Android + Chrome juga bisa memunculkan ringkasan pagi otomatis. |
 | **Pintasan & bagikan** | Tekan lama ikon untuk **Tambah tugas / Mulai fokus / Rencana besok**. Dari aplikasi lain → **Bagikan → Ritme** untuk menjadikan teks tugas atau brain dump besok (Android). Ada angka tugas jatuh tempo di ikon, dan layar tetap menyala selama fokus. |
 | **Pengingat** | Notifikasi lokal sebelum kegiatan dan pengingat rencana besok di malam hari. Kalau notifikasi tidak tersedia, muncul banner saat aplikasi dibuka malam hari. |
+| **Skripsi** | Milestone dengan target tanggal, cincin progres, hitung mundur sidang & laju yang dibutuhkan, jam fokus per milestone. Log bimbingan: poin revisi dosen langsung jadi tugas. |
+| **Freelance** | Klien dengan tarif per jam/proyek. Sesi fokus pada tugas klien jadi jam tertagih. Invoice dengan status lunas, jatuh tempo, dan teks tagihan siap kirim. |
+| **Bareng Pasangan** | Tukar kode QR jam sibuk 7 hari (tanpa isi kegiatan), lalu lihat slot kosong bersama dan langsung jadwalkan. Tanggal penting (anniversary, ulang tahun) dengan hitung mundur, dan daftar ide kencan dengan tombol acak. |
+| **Perencanaan pintar** | Target jam mingguan per kategori, jam emas (jam paling fokus), rasio estimasi vs kenyataan, check-in energi pagi, jam tidur, dan template hari. Semuanya dipakai penyusun otomatis dan ikut masuk ke prompt AI. |
+| **Bantuan kerja** | "Pecah langkah" (Claude atau pola umum) untuk tugas besar, "5 menit dulu" untuk tugas yang dihindari, suara latar fokus (hujan/derau), istirahat mata 20-20-20, dan tambah tugas pakai suara. |
+| **Motivasi** | XP & level, 16 lencana, konfeti saat 3 tugas beres, refleksi malam 30 detik, dan **Ritme Wrapped** bulanan yang bisa dibagikan sebagai gambar. |
+| **Lain-lain** | Pencarian global, tempat sampah 30 hari, ekspor ke Google Calendar (.ics), bagikan jadwal sebagai gambar, 5 warna aksen, kunci sidik jari/wajah, dan pengingat cadangan mingguan. |
 
 Tampilannya glassmorphism dengan latar aurora, mode gelap (utama) dan terang, mobile-first dengan navigasi bawah. Ukuran sentuh minimal 44px, dan pengaturan *reduced motion* dihormati.
 
@@ -97,7 +104,10 @@ Setelah dibuka sekali saat online, Ritme bisa dipakai sepenuhnya offline. Kalau 
 
 ## Batasan yang perlu diketahui
 
-- **Widget layar utama** tidak tersedia untuk PWA di Android/iPhone. Penggantinya notifikasi agenda yang menetap, pintasan ikon, dan badge.
+- **Widget layar utama** tidak tersedia untuk PWA di Android/iPhone. Penggantinya notifikasi agenda yang menetap, pintasan ikon, badge, dan ekspor .ics ke Google Calendar (widget kalender HP ikut menampilkannya). Ekspor .ics satu arah, jadi ekspor ulang setelah jadwal berubah.
+- **Dikte suara** memakai pengenalan suara bawaan browser. Di Chrome prosesnya lewat server Google, jadi butuh internet. Fitur lainnya tetap offline.
+- **Kunci sidik jari/wajah** adalah tirai privasi lokal (WebAuthn), bukan enkripsi data. Kuncinya terikat ke perangkat dan tidak ikut terbawa saat impor cadangan ke HP lain.
+- **QR cari waktu bareng**: pemindai bawaan dipakai di Chrome Android, sedangkan browser lain memakai pustaka jsQR. Yang dibagikan hanya jam sibuk, tidak termasuk judul kegiatan.
 - **Ringkasan pagi otomatis** memakai *Periodic Background Sync*: hanya Chrome Android dengan Ritme terpasang, dan jamnya ditentukan Android (tidak pasti).
 - **Pengingat**: tanpa server push, notifikasi hanya bisa dikirim selama Ritme terbuka atau masih hidup di latar belakang. Kalau aplikasi ditutup total, Android/iOS tidak membangunkannya. Karena itu ada banner malam sebagai cadangan.
 - Timer fokus tetap akurat walau aplikasi ditutup (berbasis jam akhir), tapi bunyi/notifikasi selesai baru muncul saat Ritme dibuka lagi bila sistem sudah menghentikannya.

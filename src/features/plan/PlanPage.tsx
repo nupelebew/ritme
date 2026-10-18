@@ -21,6 +21,7 @@ import { validatePlan, type ValidationResult } from '@/lib/plan/schema'
 import { useHabits } from '@/features/habits/useHabits'
 import { useTasks } from '@/features/tasks/useTasks'
 import { PlanPreview } from './PlanPreview'
+import { MicButton, voiceSupported } from '@/components/MicButton'
 import { ENERGY } from '@/features/today/SmartCards'
 
 export function PlanPage() {
@@ -179,6 +180,12 @@ export function PlanPage() {
             placeholder={'- balas chat klien soal revisi\n- baca 2 jurnal untuk bab 2\n- beli galon\n- nonton bareng malam'}
           />
         </Field>
+        {voiceSupported() && (
+          <div className="-mt-1 flex items-center gap-2 text-xs text-faint">
+            <MicButton label="Dikte brain dump" onText={(t) => setDump((dumpValue.trim() ? dumpValue.trimEnd() + '\n' : '') + '- ' + t)} />
+            Ketuk mikrofon lalu ucapkan satu hal (butuh internet).
+          </div>
+        )}
         <details className="group">
           <summary className="flex min-h-11 cursor-pointer list-none items-center text-[13px] font-medium text-muted hover:text-ink">
             Rutinitas tetap (dipakai di prompt) <span className="ml-1 text-faint group-open:hidden">· ketuk untuk ubah</span>

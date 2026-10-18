@@ -12,6 +12,7 @@ import { BUCKET_LABEL, PRIORITY, bucketOf, dueLabel, type Bucket } from '@/lib/p
 import { parseQuickAdd } from '@/lib/quickAdd'
 import { cn } from '@/lib/cn'
 import { TaskRow } from './TaskRow'
+import { MicButton } from '@/components/MicButton'
 import { TaskSheet } from './TaskSheet'
 import { TopThree } from './TopThree'
 import { useTasks, useToggleTask } from './useTasks'
@@ -98,6 +99,7 @@ export function TasksPage() {
             onChange={(e) => setQuick(e.target.value)}
             enterKeyHint="done"
           />
+          <MicButton label="Ucapkan tugas" onText={(t) => setQuick((q) => (q.trim() ? q.trim() + ' ' : '') + t)} />
           <button
             type="submit"
             disabled={!parsed?.title}

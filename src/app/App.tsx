@@ -2,6 +2,7 @@ import { Route, Routes, useLocation } from 'react-router'
 import { lazy, Suspense, useEffect } from 'react'
 import { BottomNav } from './BottomNav'
 import { UpdatePrompt } from './UpdatePrompt'
+import { LockScreen } from './LockScreen'
 import { useApplyTheme } from './useTheme'
 import { ToastProvider } from '@/components/Toast'
 import { TodayPage } from '@/features/today/TodayPage'
@@ -60,6 +61,7 @@ export function App() {
       <FocusPill />
       <ShareSheet />
       <BadgeWatcher />
+      <LockScreen />
       <main className="mx-auto min-h-dvh w-full max-w-2xl px-4 pb-32 pt-safe">
         <Suspense fallback={<div className="py-20 text-center text-sm text-faint">Memuat…</div>}>
         <Routes>
