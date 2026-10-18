@@ -246,3 +246,12 @@ select {
     scroll-behavior: auto !important;
   }
 }
+
+@keyframes pop {
+  0% { transform: scale(0.6); }
+  60% { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+.animate-pop {
+  animation: pop 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}

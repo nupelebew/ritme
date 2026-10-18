@@ -9,6 +9,7 @@ import { eventsForDate, updateOccurrence } from '@/db/events'
 import { useCategories } from '@/db/hooks'
 import { useSettings } from '@/db/settings'
 import type { DateKey, Task } from '@/db/types'
+import { HabitStrip } from '@/features/habits/HabitStrip'
 import { TaskSheet } from '@/features/tasks/TaskSheet'
 import { TopThree } from '@/features/tasks/TopThree'
 import { useTasks, useToggleTask } from '@/features/tasks/useTasks'
@@ -99,6 +100,8 @@ export function TodayPage() {
           showLink
         />
       )}
+
+      {isToday && <HabitStrip />}
 
       <section aria-label="Timeline" className="glass rounded-3xl px-3 pb-2 pt-5">
         {items && items.length === 0 && (
