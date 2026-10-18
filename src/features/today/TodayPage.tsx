@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { CalendarClock, LayoutTemplate, Plus, Search, Undo2 } from 'lucide-react'
+import { CalendarClock, LayoutTemplate, Plus, Search, Share2, Undo2 } from 'lucide-react'
 import { Button, EmptyState, Fab, IconButton, PageHeader } from '@/components/ui'
 import { useToast } from '@/components/Toast'
 import { db } from '@/db/db'
@@ -22,8 +22,9 @@ import { DayStrip } from './DayStrip'
 import { DaySummary } from './DaySummary'
 import { EventSheet, type EventDraft } from './EventSheet'
 import { Timeline } from './Timeline'
-import { BedtimeWarning, EnergyCheck, WeekTargets } from './SmartCards'
+import { BedtimeWarning, EnergyCheck, SpecialSoon, WeekTargets } from './SmartCards'
 import { TemplateSheet } from './TemplateSheet'
+import { renderDayImage, shareOrDownload } from '@/lib/shareImage'
 
 export function TodayPage() {
   const [params, setParams] = useSearchParams()
@@ -90,6 +91,8 @@ export function TodayPage() {
 
       {isToday && <EveningBanner />}
 
+      {isToday && <SpecialSoon />}
+
       <DayStrip value={date} onChange={setDate} />
 
       {items && (
@@ -124,12 +127,19 @@ export function TodayPage() {
       {items && items.length > 0 && <BedtimeWarning lastEnd={Math.max(...items.map((o) => o.end))} />}
 
       <section aria-label="Timeline" className="glass relative rounded-3xl px-3 pb-2 pt-5">
-        <IconButton
-          icon={LayoutTemplate}
-          label="Template hari"
-          className="absolute right-1 top-1 z-20"
-          onClick={() => setTemplates(true)}
-        />
+        <div className="absolute right-1 top-1 z-20 flex">
+          <IconButton
+            icon={Share2}
+            label="Bagikan jadwal sebagai gambar"
+            onClick={async () => {
+              if (!items) return
+              const blob = await renderDayImage(date, items, categories, settings.name || undefined)
+              const r = await shareOrDownload(new File([blob], `jadwal-${date}.png`, { type: 'image/png' }))
+              if (r === 'downloaded') toast({ text: 'Gambar jadwal diunduh.', tone: 'success' })
+            }}
+          />
+          <IconButton icon={LayoutTemplate} label="Template hari" onClick={() => setTemplates(true)} />
+        </div>
         {items && items.length === 0 && (
           <EmptyState
             icon={CalendarClock}

@@ -11,6 +11,7 @@ import type { DayEntry } from '@/db/types'
 import { durationLabel, minToHHMM, nowMinutes, todayKey } from '@/lib/date'
 import { useNow } from '@/lib/useNow'
 import { cn } from '@/lib/cn'
+import { daysLabel, nextOccurrence } from '@/lib/specialDates'
 
 export const ENERGY = [
   { v: 1, e: '🪫', l: 'Lowbat' },
@@ -102,6 +103,28 @@ export function WeekTargets() {
         })}
       </ul>
     </Card>
+  )
+}
+
+/** Tanggal penting dalam 7 hari ke depan */
+export function SpecialSoon() {
+  const today = todayKey()
+  const items = useLiveQuery(() => db.specialDates.toArray(), []) ?? []
+  const soon = items
+    .map((x) => ({ x, n: nextOccurrence(x, today) }))
+    .filter(({ n }) => n.days >= 0 && n.days <= 7)
+    .sort((a, b) => a.n.days - b.n.days)
+  if (!soon.length) return null
+  return (
+    <Link to="/bareng" className="flex flex-wrap items-center gap-2 rounded-2xl border border-[#c026d3]/40 bg-[#c026d3]/10 px-3.5 py-2.5 text-[13px]">
+      {soon.map(({ x, n }) => (
+        <span key={x.id} className="inline-flex items-center gap-1.5">
+          <span aria-hidden>{x.emoji}</span>
+          <b>{x.title}</b>
+          {x.yearly && n.years > 0 ? ` ke-${n.years}` : ''} · {daysLabel(n.days)}
+        </span>
+      ))}
+    </Link>
   )
 }
 

@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { Download, FileJson, FileSpreadsheet, Upload } from 'lucide-react'
+import { Download, CalendarPlus, FileJson, FileSpreadsheet, Upload } from 'lucide-react'
 import { Button, Card, Sheet } from '@/components/ui'
 import { useToast } from '@/components/Toast'
 import { db } from '@/db/db'
@@ -16,7 +16,10 @@ import {
   type Backup,
   type CsvKind,
 } from '@/db/backup'
-import { todayKey } from '@/lib/date'
+import { shiftKey, todayKey } from '@/lib/date'
+import { buildICS } from '@/lib/ics'
+import { shareOrDownload } from '@/lib/shareImage'
+import { setSetting } from '@/db/settings'
 
 export function BackupCard() {
   const toast = useToast()
@@ -25,8 +28,21 @@ export function BackupCard() {
 
   const exportJson = async () => {
     const b = await exportBackup(db)
-    download(`ritme-cadangan-${todayKey()}.json`, JSON.stringify(b, null, 2), 'application/json')
-    toast({ text: 'Cadangan JSON diunduh. Simpan di Drive/WA pribadi supaya aman.', tone: 'success' })
+    // Di HP: langsung ke menu bagikan (Drive, WA pribadi, Files…); di laptop: unduh
+    const r = await shareOrDownload(new File([JSON.stringify(b, null, 2)], `ritme-cadangan-${todayKey()}.json`, { type: 'application/json' }))
+    if (r === 'cancelled') return
+    await setSetting('lastBackupAt', Date.now())
+    toast({ text: r === 'shared' ? 'Cadangan dibagikan. 👍' : 'Cadangan JSON diunduh. Simpan di Drive/WA pribadi supaya aman.', tone: 'success' })
+  }
+  const exportIcs = async () => {
+    const from = shiftKey(todayKey(), -30)
+    const [events, cats, special] = await Promise.all([
+      db.events.filter((e) => !!e.recurrence || !!e.seriesId || e.date >= from).toArray(),
+      db.categories.toArray(),
+      db.specialDates.toArray(),
+    ])
+    const ics = buildICS(events, new Map(cats.map((c) => [c.id, c])), special)
+    await shareOrDownload(new File([ics], `ritme-${todayKey()}.ics`, { type: 'text/calendar' }))
   }
   const exportCsv = async (k: CsvKind) => {
     download(`ritme-${k}-${todayKey()}.csv`, await exportCSV(db, k), 'text/csv;charset=utf-8')
@@ -77,6 +93,15 @@ export function BackupCard() {
         ))}
       </div>
       <p className="text-xs text-faint">JSON = cadangan lengkap. CSV untuk dibuka di Excel/Sheets, dan bisa diimpor balik (digabung).</p>
+      <div className="space-y-1.5 border-t border-line pt-3">
+        <Button icon={CalendarPlus} className="w-full" onClick={exportIcs}>
+          Ekspor ke kalender (.ics)
+        </Button>
+        <p className="text-xs text-faint">
+          Jadwal (termasuk yang berulang) & tanggal penting → Google Calendar/kalender HP, satu arah. Di Google Calendar: buka calendar.google.com di laptop → Setelan →
+          Impor. Widget kalender di HP ikut menampilkannya. Ekspor ulang setelah jadwal berubah.
+        </p>
+      </div>
       <input
         ref={file}
         type="file"

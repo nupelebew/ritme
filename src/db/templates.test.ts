@@ -22,6 +22,16 @@ describe('template hari', () => {
     db.close()
   })
 
+  it('jam sibuk 7 hari: waktu yang sudah lewat hari ini dihitung sibuk', async () => {
+    const { busyDays } = await import('./together')
+    const db = new RitmeDB('test-busy')
+    await db.events.add({ id: 'e', title: 'Kerja', categoryId: 'freelance', date: '2026-10-19', start: 780, end: 930, createdAt: 0 })
+    const d = await busyDays(db, '2026-10-18', 2, 15 * 60 + 50)
+    expect(d[0].busy).toEqual([[0, 960]])
+    expect(d[1].busy).toEqual([[780, 930]])
+    db.close()
+  })
+
   it('progres target mingguan dari database (termasuk jadwal berulang)', async () => {
     const db = new RitmeDB('test-week')
     await db.events.add({ id: 'p', title: 'Nonton bareng', categoryId: 'pasangan', date: '2026-10-12', start: 1140, end: 1200, recurrence: { freq: 'daily' }, createdAt: 0 })

@@ -28,6 +28,7 @@ const SettingsPage = lazy(() => import('@/features/settings/SettingsPage').then(
 const SearchPage = lazy(() => import('@/features/search/SearchPage').then((m) => ({ default: m.SearchPage })))
 const ThesisPage = lazy(() => import('@/features/thesis/ThesisPage').then((m) => ({ default: m.ThesisPage })))
 const FreelancePage = lazy(() => import('@/features/freelance/FreelancePage').then((m) => ({ default: m.FreelancePage })))
+const CouplePage = lazy(() => import('@/features/couple/CouplePage').then((m) => ({ default: m.CouplePage })))
 const TrashPage = lazy(() => import('@/features/settings/TrashPage').then((m) => ({ default: m.TrashPage })))
 
 export function App() {
@@ -73,6 +74,7 @@ export function App() {
           <Route path="/sampah" element={<TrashPage />} />
           <Route path="/skripsi" element={<ThesisPage />} />
           <Route path="/freelance" element={<FreelancePage />} />
+          <Route path="/bareng" element={<CouplePage />} />
           <Route path="*" element={<TodayPage />} />
         </Routes>
         </Suspense>

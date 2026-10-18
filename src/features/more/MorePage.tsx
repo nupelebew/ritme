@@ -5,6 +5,7 @@ import {
   CalendarDays,
   ChevronRight,
   GraduationCap,
+  Heart,
   NotebookPen,
   Palette,
   Search,
@@ -21,6 +22,7 @@ const groups: { title: string; items: { to: string; label: string; desc: string;
     items: [
       { to: '/skripsi', label: 'Skripsi', desc: 'Milestone, log bimbingan, hitung mundur sidang', icon: GraduationCap, tint: '#8b5cf6' },
       { to: '/freelance', label: 'Freelance', desc: 'Klien, jam tertagih, invoice', icon: Briefcase, tint: '#0891b2' },
+      { to: '/bareng', label: 'Bareng Pasangan', desc: 'Cari waktu bareng (QR), tanggal penting, ide kencan', icon: Heart, tint: '#c026d3' },
     ],
   },
   {
