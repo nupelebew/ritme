@@ -11,6 +11,7 @@ import { isIOS, useInstall } from '@/lib/install'
 import { cn } from '@/lib/cn'
 import { useNotificationsActive } from '@/features/reminders/useReminders'
 import { BackupCard } from './BackupCard'
+import { useCategories } from '@/db/hooks'
 
 const themes: { v: Settings['theme']; label: string; icon: typeof Sun }[] = [
   { v: 'dark', label: 'Gelap', icon: Moon },
@@ -48,6 +49,7 @@ function Stepper({ label, value, min, max, onChange, format }: { label: string; 
 
 export function SettingsPage() {
   const s = useSettings()
+  const { list: categories } = useCategories()
   const toast = useToast()
   const notif = useNotificationsActive()
   const install = useInstall()
@@ -153,6 +155,39 @@ export function SettingsPage() {
           <Stepper label="Mulai hari" value={s.dayStartHour} min={0} max={Math.min(12, s.dayEndHour - 6)} format={hh} onChange={(v) => setSetting('dayStartHour', v)} />
           <Stepper label="Akhir hari" value={s.dayEndHour} min={Math.max(14, s.dayStartHour + 6)} max={24} format={hh} onChange={(v) => setSetting('dayEndHour', v)} />
           <p className="pt-1 text-xs text-faint">Rentang timeline dan acuan penyusunan jadwal. Durasi timer fokus diatur di halaman Fokus.</p>
+        </Card>
+      </Section>
+
+      <Section title="Target mingguan & jam tidur">
+        <Card className="space-y-1">
+          <p className="pb-1 text-xs text-muted">
+            Jam per minggu yang ingin kamu sisihkan per kategori. Terhitung dari sesi fokus atau jadwal yang sudah lewat. Penyusun jadwal mendahulukan kategori yang tertinggal.
+          </p>
+          {categories.map((c) => {
+            const h = Math.round((s.weeklyTargets[c.id] ?? 0) / 60)
+            return (
+              <Stepper
+                key={c.id}
+                label={c.name}
+                value={h}
+                min={0}
+                max={40}
+                format={(v) => (v ? `${v} j` : '–')}
+                onChange={(v) => setSetting('weeklyTargets', { ...s.weeklyTargets, [c.id]: v * 60 })}
+              />
+            )
+          })}
+          <div className="space-y-1.5 border-t border-line pt-3">
+            <span className="text-[13px] font-medium text-muted">Jam tidur</span>
+            <div className="flex flex-wrap gap-2">
+              {[0, 21, 22, 23, 24].map((v) => (
+                <Chip key={v} active={s.bedtimeHour === v} onClick={() => setSetting('bedtimeHour', v)}>
+                  {v ? hh(v) : 'Tidak dipakai'}
+                </Chip>
+              ))}
+            </div>
+            <p className="text-xs text-faint">Ritme memperingatkan jadwal yang melewati jam ini, dan penyusun otomatis berhenti 30 menit sebelumnya.</p>
+          </div>
         </Card>
       </Section>
 

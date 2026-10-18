@@ -9,8 +9,9 @@ import { db } from '@/db/db'
 import { eventsForDate } from '@/db/events'
 import { useCategories } from '@/db/hooks'
 import { applyPlan } from '@/db/plan'
+import { loadInsights, loadWeekProgress } from '@/db/insights'
 import { setSetting, useSettings } from '@/db/settings'
-import type { DateKey } from '@/db/types'
+import type { DateKey, DayEntry } from '@/db/types'
 import { copyText, readText } from '@/lib/clipboard'
 import { fmt, nowMinutes, shiftKey, todayKey } from '@/lib/date'
 import { isDue } from '@/lib/habits'
@@ -20,6 +21,7 @@ import { validatePlan, type ValidationResult } from '@/lib/plan/schema'
 import { useHabits } from '@/features/habits/useHabits'
 import { useTasks } from '@/features/tasks/useTasks'
 import { PlanPreview } from './PlanPreview'
+import { ENERGY } from '@/features/today/SmartCards'
 
 export function PlanPage() {
   const today = todayKey()
@@ -56,6 +58,28 @@ export function PlanPage() {
   const [pasted, setPasted] = useState('')
   const [result, setResult] = useState<(ValidationResult & { source: 'ai' | 'auto' }) | null>(null)
 
+  // Data pintar untuk penyusun & prompt: energi, jam emas, estimasi, target mingguan, jam tidur
+  const insights = useLiveQuery(() => loadInsights(db, today), [today])
+  const week = useLiveQuery(() => loadWeekProgress(db, settings.weeklyTargets, today, nowMinutes()), [JSON.stringify(settings.weeklyTargets), today]) ?? []
+  const energy = day?.energy
+  const setEnergy = (v?: DayEntry['energy']) =>
+    db.transaction('rw', db.days, async () => {
+      const cur = await db.days.get(date)
+      await db.days.put({ ...(cur ?? { date }), energy: v })
+    })
+  const behind = week.filter((w) => w.behind).map((w) => w.categoryId)
+  const golden = insights?.golden.confident ? insights.golden.window : undefined
+  const catName = (id: string) => categories.find((c) => c.id === id)?.name ?? id
+  const hints = [
+    energy ? `Perkiraan energi hari itu: ${energy}/5${energy <= 2 ? ' (rendah — beri beban ringan & jeda lebih banyak)' : ''}.` : '',
+    golden ? `Jam paling fokusku biasanya ${String(golden[0]).padStart(2, '0')}:00–${String(golden[1]).padStart(2, '0')}:00; taruh tugas terberat di situ.` : '',
+    insights?.estimate && insights.estimate.samples >= 3 && Math.abs(insights.estimate.ratio - 1) >= 0.15
+      ? `Pekerjaanku biasanya makan ${insights.estimate.ratio.toLocaleString('id-ID')}× dari estimasi; sesuaikan durasi blok.`
+      : '',
+    ...week.filter((w) => w.behind).map((w) => `Minggu ini ${catName(w.categoryId)} tertinggal: baru ${Math.round(w.done / 6) / 10} dari target ${w.target / 60} jam.`),
+    settings.bedtimeHour ? `Jam tidurku ${String(settings.bedtimeHour % 24).padStart(2, '0')}:00; jangan ada kegiatan setelah ${String(settings.bedtimeHour - 1).padStart(2, '0')}:30.` : '',
+  ].filter(Boolean)
+
   const ctx = useMemo(
     () => ({ categories, tasks, expectedDate: date, fixed: fixed.map((f) => ({ start: f.start, end: f.end, title: f.title })) }),
     [categories, tasks, date, fixed],
@@ -78,6 +102,7 @@ export function PlanPage() {
       focusMin: settings.focusMin,
       avgFocusMin: avg,
       about: settings.about,
+      hints,
     })
     const ok = await copyText(prompt)
     toast(
@@ -105,6 +130,11 @@ export function PlanPage() {
       dayStartHour: settings.dayStartHour,
       dayEndHour: settings.dayEndHour,
       nowMin: date === today ? nowMinutes() : undefined,
+      energy,
+      bedtimeHour: settings.bedtimeHour,
+      golden,
+      estimate: insights?.estimate,
+      behind,
     })
     setResult({ plan, errors: [], warnings: [], source: 'auto' })
   }
@@ -161,7 +191,26 @@ export function PlanPage() {
             placeholder="mis. Bangun 06:00, olahraga Selasa & Kamis sore, bimbingan biasanya Rabu."
           />
         </details>
+        <div className="space-y-1.5">
+          <span className="text-[13px] font-medium text-muted">Perkiraan energi {date === today ? 'hari ini' : 'hari itu'}</span>
+          <div role="radiogroup" aria-label="Perkiraan energi" className="grid grid-cols-5 gap-1.5">
+            {ENERGY.map((x) => (
+              <button
+                key={x.v}
+                type="button"
+                role="radio"
+                aria-checked={energy === x.v}
+                aria-label={x.l}
+                onClick={() => setEnergy(energy === x.v ? undefined : x.v)}
+                className={`flex min-h-11 flex-col items-center justify-center rounded-xl border text-lg transition ${energy === x.v ? 'border-accent bg-accent/15' : 'border-line hover:bg-white/5'}`}
+              >
+                {x.e}
+              </button>
+            ))}
+          </div>
+        </div>
         <p className="text-xs text-faint">
+          {hints.length > 0 && `${hints.length} petunjuk pintar ikut dipakai (energi, jam emas, target, jam tidur) · `}
           Konteks: {fixed.length} jadwal tetap · {ranked.length} tugas tertunda · {habits.filter((h) => isDue(h, date)).length} kebiasaan
         </p>
       </Card>

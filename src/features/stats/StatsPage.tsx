@@ -12,6 +12,7 @@ import { dayStreaks, focusByCategory, focusByDate, heatmapColumns, trend } from 
 import { cn } from '@/lib/cn'
 import { BackupCard } from '@/features/settings/BackupCard'
 import { Heatmap, TrendBars } from './charts'
+import { InsightsCard } from './InsightsCard'
 
 type Range = '7' | '30' | 'all'
 
@@ -174,6 +175,8 @@ export function StatsPage() {
           </>
         )}
       </Card>
+
+      <InsightsCard />
 
       <BackupCard />
     </div>

@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { CalendarClock, Plus, Search, Undo2 } from 'lucide-react'
-import { Button, EmptyState, Fab, PageHeader } from '@/components/ui'
+import { CalendarClock, LayoutTemplate, Plus, Search, Undo2 } from 'lucide-react'
+import { Button, EmptyState, Fab, IconButton, PageHeader } from '@/components/ui'
 import { useToast } from '@/components/Toast'
 import { db } from '@/db/db'
 import { eventsForDate, updateOccurrence } from '@/db/events'
@@ -22,6 +22,8 @@ import { DayStrip } from './DayStrip'
 import { DaySummary } from './DaySummary'
 import { EventSheet, type EventDraft } from './EventSheet'
 import { Timeline } from './Timeline'
+import { BedtimeWarning, EnergyCheck, WeekTargets } from './SmartCards'
+import { TemplateSheet } from './TemplateSheet'
 
 export function TodayPage() {
   const [params, setParams] = useSearchParams()
@@ -43,6 +45,7 @@ export function TodayPage() {
   const sessions = useSessionsOn(date)
   const toggleTask = useToggleTask()
   const [openTask, setOpenTask] = useState<Task | null>(null)
+  const [templates, setTemplates] = useState(false)
 
   // Perluas rentang jam bila ada kegiatan di luar jam aktif
   const startHour = Math.min(settings.dayStartHour, ...(items ?? []).map((o) => Math.floor(o.start / 60)))
@@ -112,9 +115,21 @@ export function TodayPage() {
         />
       )}
 
+      {isToday && <EnergyCheck />}
+
       {isToday && <HabitStrip />}
 
-      <section aria-label="Timeline" className="glass rounded-3xl px-3 pb-2 pt-5">
+      {isToday && <WeekTargets />}
+
+      {items && items.length > 0 && <BedtimeWarning lastEnd={Math.max(...items.map((o) => o.end))} />}
+
+      <section aria-label="Timeline" className="glass relative rounded-3xl px-3 pb-2 pt-5">
+        <IconButton
+          icon={LayoutTemplate}
+          label="Template hari"
+          className="absolute right-1 top-1 z-20"
+          onClick={() => setTemplates(true)}
+        />
         {items && items.length === 0 && (
           <EmptyState
             icon={CalendarClock}
@@ -141,6 +156,7 @@ export function TodayPage() {
         Tambah kegiatan
       </Fab>
 
+      {templates && items && <TemplateSheet date={date} items={items} onClose={() => setTemplates(false)} />}
       {openTask && <TaskSheet key={openTask.id} task={openTask} onClose={() => setOpenTask(null)} />}
       {editing && <EventSheet key={editing.key} occurrence={editing} onClose={() => setEditing(null)} />}
       {draft && <EventSheet key={`new-${draft.start}`} draft={draft} onClose={() => setDraft(null)} />}

@@ -65,6 +65,38 @@ describe('penyusun otomatis', () => {
   })
 })
 
+describe('penyusun otomatis pintar', () => {
+  const base = {
+    date: DATE,
+    today: TODAY,
+    fixed,
+    ranked: rankTasks(tasks, TODAY),
+    tasks,
+    categories: DEFAULT_CATEGORIES,
+    dayStartHour: 6,
+    dayEndHour: 24,
+  }
+  it('energi rendah: total kerja ≤ 3 jam & blok ≤ 60 menit', () => {
+    const p = autoPlan({ ...base, energy: 2 })
+    const work = p.blocks.filter((b) => b.taskId)
+    expect(work.reduce((a, b) => a + b.end - b.start, 0)).toBeLessThanOrEqual(180)
+    expect(Math.max(...work.map((b) => b.end - b.start))).toBeLessThanOrEqual(60)
+  })
+  it('tugas teratas masuk jam emas; malam berhenti sebelum jam tidur', () => {
+    const p = autoPlan({ ...base, golden: [9, 12], bedtimeHour: 22 })
+    expect(p.blocks.find((b) => b.title === 'Bab 3')).toMatchObject({ start: 9 * 60 })
+    expect(Math.max(...p.blocks.map((b) => b.end))).toBeLessThanOrEqual(22 * 60 - 30)
+  })
+  it('estimasi disesuaikan & kategori tertinggal didahulukan', () => {
+    const p = autoPlan({ ...base, estimate: { ratio: 1.5, samples: 5 }, behind: ['rumah'], golden: undefined })
+    expect(p.blocks.find((b) => b.title === 'Cuci baju')).toMatchObject({ end: expect.any(Number) })
+    const cuci = p.blocks.find((b) => b.title === 'Cuci baju')!
+    expect(cuci.end - cuci.start).toBe(45) // 30 × 1,5
+    const order = p.blocks.filter((b) => b.taskId).sort((a, b) => a.start - b.start).map((b) => b.title)
+    expect(order[0]).toBe('Cuci baju')
+  })
+})
+
 describe('prompt AI', () => {
   it('memuat konteks, jadwal tetap, tugas dengan id, brain dump, dan format JSON', () => {
     const p = buildPlanPrompt({

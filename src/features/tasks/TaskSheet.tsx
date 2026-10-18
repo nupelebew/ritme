@@ -15,6 +15,8 @@ import { PRIORITY } from '@/lib/priority'
 import { cn } from '@/lib/cn'
 import { unlockAudio } from '@/lib/notify'
 import { BreakdownSheet } from './BreakdownSheet'
+import { loadInsights } from '@/db/insights'
+import { adjustEstimate } from '@/lib/insights'
 
 type Draft = Omit<Task, 'id' | 'createdAt' | 'done'> & Partial<Pick<Task, 'id' | 'createdAt' | 'done' | 'doneAt'>>
 
@@ -37,6 +39,7 @@ export function TaskSheet({ task, initial, onClose }: { task?: Task; initial?: P
   const [breakdown, setBreakdown] = useState(false)
   const milestones = useLiveQuery(() => db.milestones.orderBy('order').filter((m) => !m.done || m.id === task?.milestoneId).toArray(), [task?.milestoneId]) ?? []
   const clients = useLiveQuery(() => db.clients.filter((c) => !c.archived || c.id === task?.clientId).toArray(), [task?.clientId]) ?? []
+  const insights = useLiveQuery(() => loadInsights(db, todayKey()), [])
   const set = (p: Partial<Draft>) => setT((x) => ({ ...x, ...p }))
 
   // Tugas yang sudah ada: simpan otomatis
@@ -271,6 +274,12 @@ export function TaskSheet({ task, initial, onClose }: { task?: Task; initial?: P
               </Chip>
             ))}
           </div>
+          {t.estimateMin && adjustEstimate(t.estimateMin, insights?.estimate ?? null) !== t.estimateMin && (
+            <p className="text-xs text-muted">
+              Biasanya kamu butuh {insights!.estimate!.ratio.toLocaleString('id-ID')}× estimasi → realistisnya ±
+              <b className="text-ink">{durationLabel(adjustEstimate(t.estimateMin, insights!.estimate!))}</b>.
+            </p>
+          )}
         </div>
 
         <div className="space-y-2">
