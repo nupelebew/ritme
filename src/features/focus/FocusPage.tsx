@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ChevronRight, Minus, Pause, Play, Plus, RotateCcw, Settings2, SkipForward, Target, Timer, Trash2 } from 'lucide-react'
+import { ChevronRight, Minus, Pause, Play, Plus, RotateCcw, Settings2, SkipForward, Target, Timer, Trash2, Zap } from 'lucide-react'
 import { Button, Card, Chip, IconButton, PageHeader, Sheet } from '@/components/ui'
 import { useToast } from '@/components/Toast'
 import { db } from '@/db/db'
@@ -131,6 +131,22 @@ export function FocusPage() {
       <p className="-mt-2 text-center text-sm font-medium text-muted">
         {running ? 'Jeda' : s.status === 'paused' ? 'Lanjutkan' : `Mulai ${PHASE_LABEL[s.phase].toLowerCase()}`}
       </p>
+      {idle && isFocus && (
+        <div className="-mt-2 flex justify-center">
+          <Button
+            size="sm"
+            variant="ghost"
+            icon={Zap}
+            onClick={() => {
+              unlockAudio()
+              focusStore.startCustom(5)
+              toast({ text: 'Cukup 5 menit. Kalau keasyikan, lanjut saja.' })
+            }}
+          >
+            Berat mulai? 5 menit dulu
+          </Button>
+        </div>
+      )}
 
       {/* Target sesi */}
       <button type="button" onClick={() => setPicker(true)} className="glass flex w-full items-center gap-3 rounded-3xl p-3 text-left transition hover:bg-white/5">

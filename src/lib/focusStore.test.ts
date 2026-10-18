@@ -73,6 +73,17 @@ describe('timer fokus', () => {
     expect(store.get().status).toBe('idle')
   })
 
+  it('"5 menit dulu": sesi bebas tanpa istirahat otomatis & tanpa menambah siklus', () => {
+    const { store, logs, advance } = setup()
+    store.startCustom(5, { taskId: 'malas', categoryId: 'skripsi' })
+    expect(store.remaining()).toBe(5 * MIN)
+    advance(5 * MIN)
+    store.tick()
+    expect(logs[0]).toMatchObject({ durationMs: 5 * MIN, taskId: 'malas', completed: true })
+    expect(store.get()).toMatchObject({ phase: 'focus', status: 'idle', cycle: 0, durationMs: 25 * MIN })
+    expect(store.get().custom).toBeUndefined()
+  })
+
   it('bertahan setelah aplikasi ditutup dan menyusul fase yang terlewat', () => {
     const { store, logs, ends, advance, make } = setup()
     store.start()

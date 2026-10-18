@@ -26,6 +26,7 @@ const HistoryPage = lazy(() => import('@/features/stats/HistoryPage').then((m) =
 const CategoriesPage = lazy(() => import('@/features/settings/CategoriesPage').then((m) => ({ default: m.CategoriesPage })))
 const SettingsPage = lazy(() => import('@/features/settings/SettingsPage').then((m) => ({ default: m.SettingsPage })))
 const SearchPage = lazy(() => import('@/features/search/SearchPage').then((m) => ({ default: m.SearchPage })))
+const ThesisPage = lazy(() => import('@/features/thesis/ThesisPage').then((m) => ({ default: m.ThesisPage })))
 const TrashPage = lazy(() => import('@/features/settings/TrashPage').then((m) => ({ default: m.TrashPage })))
 
 export function App() {
@@ -69,6 +70,7 @@ export function App() {
           <Route path="/pengaturan" element={<SettingsPage />} />
           <Route path="/cari" element={<SearchPage />} />
           <Route path="/sampah" element={<TrashPage />} />
+          <Route path="/skripsi" element={<ThesisPage />} />
           <Route path="*" element={<TodayPage />} />
         </Routes>
         </Suspense>

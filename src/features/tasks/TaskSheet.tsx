@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { CalendarPlus, Check, Plus, Timer, Trash2, X } from 'lucide-react'
+import { CalendarPlus, Check, Plus, Timer, Trash2, Wand2, X, Zap } from 'lucide-react'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router'
 import { focusStore } from '@/features/focus/focus'
 import { Button, Chip, Field, IconButton, Sheet } from '@/components/ui'
@@ -12,6 +13,8 @@ import type { Priority, Subtask, Task } from '@/db/types'
 import { durationLabel, minToHHMM, shiftKey, todayKey } from '@/lib/date'
 import { PRIORITY } from '@/lib/priority'
 import { cn } from '@/lib/cn'
+import { unlockAudio } from '@/lib/notify'
+import { BreakdownSheet } from './BreakdownSheet'
 
 type Draft = Omit<Task, 'id' | 'createdAt' | 'done'> & Partial<Pick<Task, 'id' | 'createdAt' | 'done' | 'doneAt'>>
 
@@ -31,6 +34,8 @@ export function TaskSheet({ task, initial, onClose }: { task?: Task; initial?: P
     },
   )
   const [newSub, setNewSub] = useState('')
+  const [breakdown, setBreakdown] = useState(false)
+  const milestones = useLiveQuery(() => db.milestones.orderBy('order').filter((m) => !m.done || m.id === task?.milestoneId).toArray(), [task?.milestoneId]) ?? []
   const set = (p: Partial<Draft>) => setT((x) => ({ ...x, ...p }))
 
   // Tugas yang sudah ada: simpan otomatis
@@ -133,18 +138,64 @@ export function TaskSheet({ task, initial, onClose }: { task?: Task; initial?: P
           />
         </Field>
         {task && !t.done && (
-          <Button
-            size="sm"
-            icon={Timer}
-            className="-mt-2"
-            onClick={async () => {
-              await close()
-              focusStore.setTarget({ taskId: task.id, categoryId: t.categoryId })
-              navigate('/fokus')
+          <div className="-mt-2 flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              icon={Timer}
+              onClick={async () => {
+                await close()
+                focusStore.setTarget({ taskId: task.id, categoryId: t.categoryId })
+                navigate('/fokus')
+              }}
+            >
+              Fokuskan
+            </Button>
+            <Button
+              size="sm"
+              icon={Zap}
+              title="Timer 5 menit — memulai itu bagian tersulit"
+              onClick={async () => {
+                await close()
+                unlockAudio()
+                focusStore.startCustom(5, { taskId: task.id, categoryId: t.categoryId })
+                navigate('/fokus')
+              }}
+            >
+              5 menit dulu
+            </Button>
+            <Button size="sm" icon={Wand2} onClick={() => setBreakdown(true)}>
+              Pecah langkah
+            </Button>
+          </div>
+        )}
+        {milestones.length > 0 && (
+          <div className="space-y-1.5">
+            <span className="text-[13px] font-medium text-muted">Milestone skripsi</span>
+            <div className="scroll-thin -mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+              <Chip active={!t.milestoneId} onClick={() => set({ milestoneId: undefined })}>
+                Tidak ada
+              </Chip>
+              {milestones.map((m) => (
+                <Chip key={m.id} active={t.milestoneId === m.id} onClick={() => set({ milestoneId: m.id })}>
+                  {m.title}
+                </Chip>
+              ))}
+            </div>
+          </div>
+        )}
+        {breakdown && task && (
+          <BreakdownSheet
+            task={{ ...(t as Task), title: t.title }}
+            categoryName={categories.find((c) => c.id === t.categoryId)?.name}
+            onAdd={(steps) => {
+              set({ subtasks: [...t.subtasks, ...steps.map((s) => ({ id: uid(), title: s.title, done: false }))] })
+              if (!t.estimateMin) {
+                const sum = steps.reduce((a, s) => a + (s.estimateMin ?? 0), 0)
+                if (sum) set({ estimateMin: sum })
+              }
             }}
-          >
-            Fokuskan tugas ini
-          </Button>
+            onClose={() => setBreakdown(false)}
+          />
         )}
 
         <div className="space-y-1.5">

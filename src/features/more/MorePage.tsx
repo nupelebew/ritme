@@ -3,6 +3,7 @@ import {
   BarChart3,
   CalendarDays,
   ChevronRight,
+  GraduationCap,
   NotebookPen,
   Palette,
   Search,
@@ -14,6 +15,10 @@ import {
 import { PageHeader } from '@/components/ui'
 
 const groups: { title: string; items: { to: string; label: string; desc: string; icon: LucideIcon; tint: string }[] }[] = [
+  {
+    title: 'Proyek',
+    items: [{ to: '/skripsi', label: 'Skripsi', desc: 'Milestone, log bimbingan, hitung mundur sidang', icon: GraduationCap, tint: '#8b5cf6' }],
+  },
   {
     title: 'Rencanakan',
     items: [

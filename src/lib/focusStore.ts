@@ -22,6 +22,8 @@ export interface FocusState {
   categoryId?: string
   /** Jumlah sesi fokus selesai dalam siklus ini */
   cycle: number
+  /** Sesi berdurasi bebas (tanpa istirahat otomatis) */
+  custom?: boolean
 }
 
 export interface SessionLog {
@@ -113,6 +115,24 @@ export function createFocusStore(
       if (state.status === 'paused') set({ status: 'running', endsAt: t + (state.remainingMs ?? 0), remainingMs: undefined })
       else set({ status: 'running', endsAt: t + state.durationMs, startedAt: t })
     },
+    /**
+     * Sesi fokus berdurasi bebas (mis. "5 menit dulu"). Tidak menambah siklus dan
+     * tidak memicu istirahat otomatis; sesi yang sedang jalan dihentikan & dicatat dulu.
+     */
+    startCustom(min: number, target?: { taskId?: string; categoryId?: string }) {
+      if (state.status !== 'idle') api.stop()
+      const t = now()
+      set({
+        phase: 'focus',
+        status: 'running',
+        durationMs: min * MIN,
+        endsAt: t + min * MIN,
+        startedAt: t,
+        remainingMs: undefined,
+        custom: true,
+        ...(target ? { taskId: target.taskId, categoryId: target.categoryId } : {}),
+      })
+    },
     pause() {
       if (state.status !== 'running') return
       set({ status: 'paused', remainingMs: remaining(), endsAt: undefined })
@@ -121,7 +141,7 @@ export function createFocusStore(
     stop() {
       if (state.status === 'idle') return
       logFocus(now(), false)
-      set({ status: 'idle', phase: 'focus', durationMs: durationFor('focus', cfg), endsAt: undefined, remainingMs: undefined, startedAt: undefined })
+      set({ status: 'idle', phase: 'focus', durationMs: durationFor('focus', cfg), endsAt: undefined, remainingMs: undefined, startedAt: undefined, custom: undefined })
     },
     /** Lewati ke fase berikutnya. Fokus yang dilewati dicatat bila ≥ 1 menit. */
     skip() {
@@ -135,7 +155,7 @@ export function createFocusStore(
       const cycle = completedFocus ? state.cycle + 1 : state.cycle
       const next: Phase = completedFocus && cycle % cfg.longBreakEvery === 0 ? 'long' : 'short'
       const dur = durationFor(next, cfg)
-      set({ phase: next, status: 'running', durationMs: dur, endsAt: at + dur, remainingMs: undefined, startedAt: at, cycle: next === 'long' ? 0 : cycle })
+      set({ phase: next, status: 'running', durationMs: dur, endsAt: at + dur, remainingMs: undefined, startedAt: at, cycle: next === 'long' ? 0 : cycle, custom: undefined })
       return next
     },
     /** Panggil berkala. Menyelesaikan fase yang waktunya habis (bisa menyusul beberapa fase). */
@@ -144,7 +164,11 @@ export function createFocusStore(
         const endedAt = state.endsAt!
         const fresh = now() - endedAt < 60_000
         const phase = state.phase
-        if (phase === 'focus') {
+        if (phase === 'focus' && state.custom) {
+          logFocus(endedAt, true)
+          set({ phase: 'focus', status: 'idle', durationMs: durationFor('focus', cfg), endsAt: undefined, startedAt: undefined, custom: undefined })
+          events.onPhaseEnd?.(phase, 'focus', fresh)
+        } else if (phase === 'focus') {
           logFocus(endedAt, true)
           const next = api.toNext(endedAt, true)
           events.onPhaseEnd?.(phase, next, fresh)
