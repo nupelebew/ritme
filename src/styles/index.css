@@ -263,3 +263,11 @@ select {
 .animate-breathe {
   animation: breathe 5s ease-in-out infinite;
 }
+
+@keyframes drop {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: none; }
+}
+.animate-drop {
+  animation: drop 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}

@@ -16,6 +16,12 @@ export interface Settings {
   notifications: boolean
   /** Menit sebelum kegiatan untuk pengingat; 0 = mati */
   eventReminderMin: number
+  /** Notifikasi "Agenda hari ini" yang menetap */
+  agendaNotif: boolean
+  /** Angka tugas jatuh tempo di ikon aplikasi */
+  badge: boolean
+  /** Layar tetap menyala selama timer fokus berjalan */
+  keepAwake: boolean
   name: string
 }
 
@@ -31,6 +37,9 @@ export const DEFAULT_SETTINGS: Settings = {
   eveningReminderHour: 20,
   notifications: false,
   eventReminderMin: 10,
+  agendaNotif: true,
+  badge: true,
+  keepAwake: true,
   name: '',
 }
 

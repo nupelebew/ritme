@@ -16,5 +16,6 @@
     "types": ["vite/client", "vite-plugin-pwa/client", "vite-plugin-pwa/react"],
     "paths": { "@/*": ["./src/*"] }
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": ["src/sw.ts"]
 }

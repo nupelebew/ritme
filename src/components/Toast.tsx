@@ -25,13 +25,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {children}
       <div
         aria-live="polite"
-        className="pointer-events-none fixed inset-x-0 bottom-28 z-[60] flex flex-col items-center gap-2 px-4"
+        className="pointer-events-none fixed inset-x-0 top-[calc(max(env(safe-area-inset-top),0.75rem)+3.75rem)] z-[60] flex flex-col items-center gap-2 px-4"
       >
         {items.map((t) => (
           <div
             key={t.id}
             className={cn(
-              'glass-strong pointer-events-auto flex min-h-11 w-full max-w-md items-center gap-3 rounded-2xl px-4 py-2 text-sm animate-rise',
+              'glass-strong pointer-events-auto flex min-h-11 w-full max-w-md items-center gap-3 rounded-2xl px-4 py-2 text-sm animate-drop',
               t.tone === 'error' && 'text-danger',
             )}
           >

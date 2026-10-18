@@ -169,6 +169,43 @@ export function Field({ label, hint, children }: { label: string; hint?: string;
   )
 }
 
+/** Sakelar on/off dengan label & keterangan; seluruh baris bisa diketuk */
+export function Toggle({
+  label,
+  hint,
+  checked,
+  disabled,
+  onChange,
+}: {
+  label: string
+  hint?: ReactNode
+  checked: boolean
+  disabled?: boolean
+  onChange: (v: boolean) => void
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      disabled={disabled}
+      onClick={() => onChange(!checked)}
+      className="flex min-h-12 w-full items-center gap-3 text-left disabled:opacity-40"
+    >
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-medium">{label}</span>
+        {hint && <span className="block text-xs text-muted">{hint}</span>}
+      </span>
+      <span
+        className={cn('relative h-7 w-12 shrink-0 rounded-full transition', checked ? 'bg-[linear-gradient(110deg,var(--accent),var(--accent-2))]' : 'bg-white/12')}
+        aria-hidden
+      >
+        <span className={cn('absolute top-1 size-5 rounded-full bg-white shadow transition-all', checked ? 'left-6' : 'left-1')} />
+      </span>
+    </button>
+  )
+}
+
 export function Chip({
   active,
   color,

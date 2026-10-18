@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router'
 import { CalendarDays, CheckCircle2, Flag, ListChecks, Plus, Tag, Timer, Wand2 } from 'lucide-react'
 import { Chip, EmptyState, Fab, PageHeader } from '@/components/ui'
 import { useToast } from '@/components/Toast'
@@ -23,7 +24,12 @@ export function TasksPage() {
   const toast = useToast()
   const [tab, setTab] = useState<'active' | 'done'>('active')
   const [cat, setCat] = useState<string | null>(null)
-  const [open, setOpen] = useState<Task | 'new' | null>(null)
+  // Pintasan ikon "Tambah tugas" membuka /tugas?baru=1
+  const [params, setParams] = useSearchParams()
+  const [open, setOpen] = useState<Task | 'new' | null>(() => (params.get('baru') ? 'new' : null))
+  useEffect(() => {
+    if (params.get('baru')) setParams({}, { replace: true })
+  }, [params, setParams])
   const [quick, setQuick] = useState('')
 
   const parsed = quick.trim() ? parseQuickAdd(quick, today, categories) : null

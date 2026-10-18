@@ -10,6 +10,8 @@ import { FocusPage } from '@/features/focus/FocusPage'
 import { FocusPill } from '@/features/focus/FocusPill'
 import { useFocusEngine } from '@/features/focus/focus'
 import { useReminders } from '@/features/reminders/useReminders'
+import { useAgenda } from '@/features/reminders/useAgenda'
+import { ShareSheet } from '@/features/share/ShareSheet'
 import '@/lib/install'
 import { HabitsPage } from '@/features/habits/HabitsPage'
 import { MorePage } from '@/features/more/MorePage'
@@ -26,6 +28,7 @@ export function App() {
   useApplyTheme()
   useFocusEngine()
   useReminders()
+  useAgenda()
   const { pathname } = useLocation()
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -42,6 +45,7 @@ export function App() {
       <div className="grain" aria-hidden />
       <UpdatePrompt />
       <FocusPill />
+      <ShareSheet />
       <main className="mx-auto min-h-dvh w-full max-w-2xl px-4 pb-32 pt-safe">
         <Suspense fallback={<div className="py-20 text-center text-sm text-faint">Memuat…</div>}>
         <Routes>

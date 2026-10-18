@@ -1,8 +1,9 @@
-import type { ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
+import { periodicSyncSupported } from '@/features/reminders/useAgenda'
 import { Link } from 'react-router'
 import { BellRing, ChevronRight, Download, Minus, Monitor, Moon, Palette, Plus, Share, Smartphone, Sun } from 'lucide-react'
 import { BackHeader } from '@/components/BackHeader'
-import { Button, Card, Chip, Field, IconButton } from '@/components/ui'
+import { Button, Card, Chip, Field, IconButton, Toggle } from '@/components/ui'
 import { useToast } from '@/components/Toast'
 import { setSetting, useSettings, type Settings } from '@/db/settings'
 import { showLocalNotification } from '@/lib/notify'
@@ -43,6 +44,10 @@ export function SettingsPage() {
   const notif = useNotificationsActive()
   const install = useInstall()
   const hh = (h: number) => `${String(h).padStart(2, '0')}:00`
+  const [bgSync, setBgSync] = useState(false)
+  useEffect(() => {
+    void periodicSyncSupported().then(setBgSync)
+  }, [])
 
   const enableNotifications = async () => {
     if (notif.status === 'unsupported') return
@@ -156,6 +161,31 @@ export function SettingsPage() {
                 </Chip>
               ))}
             </div>
+          </div>
+          <div className="divide-y divide-line border-t border-line pt-1">
+            <Toggle
+              label="Agenda hari ini di notifikasi"
+              hint={
+                notif.active
+                  ? `Satu notifikasi yang menetap & selalu terbarui, dengan tombol Selesai dan Mulai fokus.${bgSync ? ' Di HP ini juga muncul ringkasan pagi otomatis (jamnya diatur Android).' : ''}`
+                  : 'Butuh notifikasi aktif.'
+              }
+              checked={notif.active && s.agendaNotif}
+              disabled={!notif.active}
+              onChange={(v) => setSetting('agendaNotif', v)}
+            />
+            <Toggle
+              label="Angka di ikon aplikasi"
+              hint="Jumlah tugas yang tenggatnya hari ini atau sudah lewat (iPhone, Windows, Mac; Android biasanya titik)."
+              checked={s.badge}
+              onChange={(v) => setSetting('badge', v)}
+            />
+            <Toggle
+              label="Layar tetap menyala saat fokus"
+              hint="Selama timer berjalan dan Ritme terbuka."
+              checked={s.keepAwake}
+              onChange={(v) => setSetting('keepAwake', v)}
+            />
           </div>
         </Card>
       </Section>

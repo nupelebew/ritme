@@ -55,6 +55,31 @@ export function useFocusEngine() {
     })
   }, [s.focusMin, s.shortBreakMin, s.longBreakMin, s.longBreakEvery])
 
+  // Layar tetap menyala saat timer berjalan (dilepas otomatis oleh browser saat tab disembunyikan)
+  const { status } = useFocusState()
+  useEffect(() => {
+    const wl = (navigator as Navigator & { wakeLock?: { request: (t: 'screen') => Promise<{ release: () => Promise<void> }> } }).wakeLock
+    if (!wl || !s.keepAwake || status !== 'running') return
+    let lock: { release: () => Promise<void> } | undefined
+    let alive = true
+    const acquire = async () => {
+      if (document.visibilityState !== 'visible') return
+      try {
+        lock = await wl.request('screen')
+        if (!alive) void lock.release()
+      } catch {
+        /* ditolak, mis. mode hemat baterai */
+      }
+    }
+    void acquire()
+    document.addEventListener('visibilitychange', acquire)
+    return () => {
+      alive = false
+      document.removeEventListener('visibilitychange', acquire)
+      void lock?.release().catch(() => {})
+    }
+  }, [s.keepAwake, status])
+
   useEffect(() => {
     focusStore.tick()
     const id = setInterval(() => focusStore.tick(), 500)

@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ChevronRight, Minus, Pause, Play, Plus, RotateCcw, Settings2, SkipForward, Target, Timer, Trash2 } from 'lucide-react'
 import { Button, Card, Chip, IconButton, PageHeader, Sheet } from '@/components/ui'
@@ -27,6 +28,23 @@ export function FocusPage() {
   useNow(s.status === 'running' ? 250 : 30_000)
   const [picker, setPicker] = useState(false)
   const [config, setConfig] = useState(false)
+
+  // Dari tombol notifikasi / pintasan ikon: ?mulai=<idTugas> atau ?mulai=1
+  const [params, setParams] = useSearchParams()
+  const mulai = params.get('mulai')
+  useEffect(() => {
+    if (!mulai) return
+    void (async () => {
+      const t = mulai !== '1' ? await db.tasks.get(mulai) : undefined
+      const st = focusStore.get()
+      if (t && st.status === 'idle') focusStore.setTarget({ taskId: t.id, categoryId: t.categoryId })
+      if (st.status === 'idle' && st.phase !== 'focus') focusStore.setPhase('focus')
+      if (focusStore.get().status !== 'running') focusStore.start()
+      toast({ text: t ? `Fokus dimulai: ${t.title}` : 'Fokus dimulai.', tone: 'success' })
+      setParams({}, { replace: true })
+    })()
+    // hanya bereaksi saat parameter `mulai` muncul
+  }, [mulai])
 
   const task = useLiveQuery(() => (s.taskId ? db.tasks.get(s.taskId) : undefined), [s.taskId])
   const cat = categories.get(task?.categoryId ?? s.categoryId ?? '')

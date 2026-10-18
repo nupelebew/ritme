@@ -16,6 +16,11 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'prompt',
+      // Service worker buatan sendiri (src/sw.ts): offline + tombol notifikasi + ringkasan pagi
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
+      injectManifest: { globPatterns: ['**/*.{js,css,html,svg,png,woff2,webmanifest}'] },
       includeAssets: ['favicon.svg', 'apple-touch-icon-180x180.png'],
       manifest: {
         name: 'Ritme — Jadwal Harian',
@@ -34,10 +39,15 @@ export default defineConfig({
           { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },
           { src: 'maskable-icon-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
-      },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,woff2,webmanifest}'],
-        navigateFallback: 'index.html',
+        // Tekan lama ikon aplikasi → pintasan
+        shortcuts: [
+          { name: 'Hari ini', url: './#/', icons: [{ src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' }] },
+          { name: 'Tambah tugas', url: './#/tugas?baru=1', icons: [{ src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' }] },
+          { name: 'Mulai fokus', url: './#/fokus?mulai=1', icons: [{ src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' }] },
+          { name: 'Rencana besok', url: './#/rencana', icons: [{ src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' }] },
+        ],
+        // Bagikan teks dari aplikasi lain → Ritme (Android, aplikasi terpasang)
+        share_target: { action: './', method: 'GET', params: { title: 'title', text: 'text', url: 'url' } },
       },
     }),
   ],

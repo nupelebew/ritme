@@ -16,6 +16,8 @@ Jadwal harian pribadi berbentuk PWA: timeline per jam, tugas dengan "3 hal terpe
 | **Rekap mingguan** | Angka minggu ini, grafik per hari, keseimbangan kategori, dan prompt evaluasi untuk Claude. |
 | **Track record** | Tren mingguan/bulanan, heatmap kalender, fokus per kategori, streak terpanjang, serta riwayat per tanggal dengan mood 1–5 dan catatan. |
 | **Data** | Ekspor/impor JSON (cadangan lengkap) dan CSV (sesi, tugas, riwayat harian). Impor bisa digabung atau mengganti semua, dan bisa diurungkan. |
+| **Notifikasi agenda** | Satu notifikasi "Agenda hari ini" yang menetap dan selalu terbarui: kegiatan sekarang/berikutnya, 3 tugas penting, kebiasaan yang belum dicentang. Tombol **✓ Selesai** mencentang tugas teratas tanpa membuka aplikasi, **⏱ Mulai fokus** langsung menjalankan timer. Android + Chrome juga bisa memunculkan ringkasan pagi otomatis. |
+| **Pintasan & bagikan** | Tekan lama ikon untuk **Tambah tugas / Mulai fokus / Rencana besok**. Dari aplikasi lain → **Bagikan → Ritme** untuk menjadikan teks tugas atau brain dump besok (Android). Ada angka tugas jatuh tempo di ikon, dan layar tetap menyala selama fokus. |
 | **Pengingat** | Notifikasi lokal sebelum kegiatan dan pengingat rencana besok di malam hari. Kalau notifikasi tidak tersedia, muncul banner saat aplikasi dibuka malam hari. |
 
 Tampilannya glassmorphism dengan latar aurora, mode gelap (utama) dan terang, mobile-first dengan navigasi bawah. Ukuran sentuh minimal 44px, dan pengaturan *reduced motion* dihormati.
@@ -95,6 +97,8 @@ Setelah dibuka sekali saat online, Ritme bisa dipakai sepenuhnya offline. Kalau 
 
 ## Batasan yang perlu diketahui
 
+- **Widget layar utama** tidak tersedia untuk PWA di Android/iPhone. Penggantinya notifikasi agenda yang menetap, pintasan ikon, dan badge.
+- **Ringkasan pagi otomatis** memakai *Periodic Background Sync*: hanya Chrome Android dengan Ritme terpasang, dan jamnya ditentukan Android (tidak pasti).
 - **Pengingat**: tanpa server push, notifikasi hanya bisa dikirim selama Ritme terbuka atau masih hidup di latar belakang. Kalau aplikasi ditutup total, Android/iOS tidak membangunkannya. Karena itu ada banner malam sebagai cadangan.
 - Timer fokus tetap akurat walau aplikasi ditutup (berbasis jam akhir), tapi bunyi/notifikasi selesai baru muncul saat Ritme dibuka lagi bila sistem sudah menghentikannya.
 - Kualitas rencana dari Claude bergantung pada balasannya. Validator menolak format yang salah dan memberi peringatan untuk tabrakan jadwal, tapi tetap cek pratinjaunya.
