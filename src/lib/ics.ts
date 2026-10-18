@@ -38,7 +38,18 @@ const stamp = () => new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+
  * Seri berulang jadi RRULE (+EXDATE); kejadian yang diubah sekali jadi VEVENT dengan RECURRENCE-ID.
  * Tanggal penting tahunan jadi acara seharian berulang tiap tahun.
  */
-export function buildICS(events: ScheduleEvent[], categories: Map<string, Category>, special: SpecialDate[] = [], calName = 'Ritme') {
+export interface IcsOptions {
+  calName?: string
+  /** Alarm tepat saat kegiatan mulai (pergantian blok) */
+  alarmAtStart?: boolean
+  /** Alarm tambahan N menit sebelum mulai; 0 = tidak */
+  alarmBeforeMin?: number
+}
+
+const alarm = (trigger: string, text: string) => ['BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${esc(text)}`, `TRIGGER:${trigger}`, 'END:VALARM']
+
+export function buildICS(events: ScheduleEvent[], categories: Map<string, Category>, special: SpecialDate[] = [], opts: IcsOptions = {}) {
+  const { calName = 'Ritme', alarmAtStart = true, alarmBeforeMin = 0 } = opts
   const L: string[] = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Ritme//Jadwal Harian//ID', 'CALSCALE:GREGORIAN', `X-WR-CALNAME:${esc(calName)}`]
   const masters = new Map(events.filter((e) => e.recurrence).map((e) => [e.id, e]))
   const ts = stamp()
@@ -62,6 +73,8 @@ export function buildICS(events: ScheduleEvent[], categories: Map<string, Catego
       const m = masters.get(e.seriesId)
       if (m) L.push(`RECURRENCE-ID:${dt(e.date, m.start)}`)
     }
+    if (alarmBeforeMin > 0) L.push(...alarm(`-PT${alarmBeforeMin}M`, `${e.title} sebentar lagi`))
+    if (alarmAtStart) L.push(...alarm('PT0M', `Sekarang: ${e.title}`))
     L.push('END:VEVENT')
   }
 
@@ -69,6 +82,8 @@ export function buildICS(events: ScheduleEvent[], categories: Map<string, Catego
     const d = s.date.replace(/-/g, '')
     L.push('BEGIN:VEVENT', `UID:${s.id}@ritme-tanggal`, `DTSTAMP:${ts}`, `DTSTART;VALUE=DATE:${d}`, `DTEND;VALUE=DATE:${shiftKey(s.date, 1).replace(/-/g, '')}`, `SUMMARY:${esc(`${s.emoji} ${s.title}`)}`)
     if (s.yearly) L.push('RRULE:FREQ=YEARLY')
+    // tanggal penting: ingatkan sehari sebelumnya jam 19.00 dan di hari-H jam 08.00
+    L.push(...alarm('-PT5H', `Besok: ${s.title}`), ...alarm('PT8H', `Hari ini: ${s.title}`))
     L.push('END:VEVENT')
   }
   L.push('END:VCALENDAR')

@@ -10,7 +10,7 @@ import { TasksPage } from '@/features/tasks/TasksPage'
 import { FocusPage } from '@/features/focus/FocusPage'
 import { FocusPill } from '@/features/focus/FocusPill'
 import { useFocusEngine } from '@/features/focus/focus'
-import { useReminders } from '@/features/reminders/useReminders'
+import { ReminderToasts, useReminders } from '@/features/reminders/useReminders'
 import { useAgenda } from '@/features/reminders/useAgenda'
 import { ShareSheet } from '@/features/share/ShareSheet'
 import { BadgeWatcher } from '@/features/badges/useAchievements'
@@ -61,6 +61,7 @@ export function App() {
       <FocusPill />
       <ShareSheet />
       <BadgeWatcher />
+      <ReminderToasts />
       <LockScreen />
       <main className="mx-auto min-h-dvh w-full max-w-2xl px-4 pb-32 pt-safe">
         <Suspense fallback={<div className="py-20 text-center text-sm text-faint">Memuat…</div>}>

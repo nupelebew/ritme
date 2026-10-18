@@ -9,6 +9,7 @@ import { db } from '@/db/db'
 import { eventsForDate } from '@/db/events'
 import { useCategories } from '@/db/hooks'
 import { applyPlan } from '@/db/plan'
+import { exportCalendar } from '@/db/calendar'
 import { loadInsights, loadWeekProgress } from '@/db/insights'
 import { setSetting, useSettings } from '@/db/settings'
 import type { DateKey, DayEntry } from '@/db/types'
@@ -147,6 +148,10 @@ export function PlanPage() {
       text: `${r.events} blok${r.tasks ? ` & ${r.tasks} tugas` : ''} ditambahkan ke ${fmt(date, 'EEEE')}.`,
       tone: 'success',
       action: { label: 'Urungkan', run: r.undo },
+    })
+    toast({
+      text: '⏰ Kirim ke kalender HP supaya tetap ada alarm walau Ritme ditutup?',
+      action: { label: 'Kirim', run: () => void exportCalendar() },
     })
     setResult(null)
     setPasted('')

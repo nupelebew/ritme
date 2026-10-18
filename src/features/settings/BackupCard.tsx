@@ -16,8 +16,8 @@ import {
   type Backup,
   type CsvKind,
 } from '@/db/backup'
-import { shiftKey, todayKey } from '@/lib/date'
-import { buildICS } from '@/lib/ics'
+import { todayKey } from '@/lib/date'
+import { exportCalendar } from '@/db/calendar'
 import { shareOrDownload } from '@/lib/shareImage'
 import { setSetting } from '@/db/settings'
 
@@ -35,14 +35,8 @@ export function BackupCard() {
     toast({ text: r === 'shared' ? 'Cadangan dibagikan. 👍' : 'Cadangan JSON diunduh. Simpan di Drive/WA pribadi supaya aman.', tone: 'success' })
   }
   const exportIcs = async () => {
-    const from = shiftKey(todayKey(), -30)
-    const [events, cats, special] = await Promise.all([
-      db.events.filter((e) => !!e.recurrence || !!e.seriesId || e.date >= from).toArray(),
-      db.categories.toArray(),
-      db.specialDates.toArray(),
-    ])
-    const ics = buildICS(events, new Map(cats.map((c) => [c.id, c])), special)
-    await shareOrDownload(new File([ics], `ritme-${todayKey()}.ics`, { type: 'text/calendar' }))
+    const r = await exportCalendar()
+    if (r === 'downloaded') toast({ text: 'File kalender diunduh.', tone: 'success' })
   }
   const exportCsv = async (k: CsvKind) => {
     download(`ritme-${k}-${todayKey()}.csv`, await exportCSV(db, k), 'text/csv;charset=utf-8')

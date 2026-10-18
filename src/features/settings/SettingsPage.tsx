@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { periodicSyncSupported } from '@/features/reminders/useAgenda'
 import { Link } from 'react-router'
-import { BellRing, ChevronRight, Download, Minus, Monitor, Moon, Palette, Plus, Share, Smartphone, Sun } from 'lucide-react'
+import { AlarmClock, BellRing, CalendarPlus, ChevronRight, Download, Minus, Monitor, Moon, Palette, Plus, Share, Smartphone, Sun } from 'lucide-react'
 import { BackHeader } from '@/components/BackHeader'
 import { Button, Card, Chip, Field, IconButton, Toggle } from '@/components/ui'
 import { useToast } from '@/components/Toast'
@@ -11,6 +11,7 @@ import { isIOS, useInstall } from '@/lib/install'
 import { cn } from '@/lib/cn'
 import { useNotificationsActive } from '@/features/reminders/useReminders'
 import { BackupCard } from './BackupCard'
+import { exportCalendar } from '@/db/calendar'
 import { createLock, lockFlag, lockSupported, markUnlocked, verifyLock } from '@/lib/appLock'
 import { useCategories } from '@/db/hooks'
 
@@ -233,6 +234,50 @@ export function SettingsPage() {
               ))}
             </div>
           </div>
+          <Toggle
+            label="Bunyi saat kegiatan mulai"
+            hint="Tiap pergantian blok (mis. 07.00 Sarapan): getar + notifikasi yang tetap tampil sampai diketuk. Saat Ritme terbuka juga bunyi “ting” dan pesan di layar."
+            checked={s.blockAlerts}
+            onChange={(v) => setSetting('blockAlerts', v)}
+          />
+          <details className="group rounded-2xl border border-accent/40 bg-accent/10 p-3">
+            <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 text-sm font-semibold">
+              <AlarmClock className="size-5 shrink-0 text-accent" aria-hidden />
+              <span className="flex-1">Tetap bunyi walau Ritme ditutup</span>
+              <ChevronRight className="size-4 text-faint transition group-open:rotate-90" aria-hidden />
+            </summary>
+            <div className="space-y-3 pt-2 text-[13px] text-muted">
+              <p>
+                Aplikasi web tidak bisa membangunkan dirinya sendiri setelah ditutup total. Solusinya: kirim jadwal ke <b className="text-ink">aplikasi Kalender HP</b> — kalender selalu berbunyi. File
+                kalender dari Ritme sudah berisi alarm{s.blockAlerts ? ' saat mulai' : ''}
+                {s.eventReminderMin ? ` dan ${s.eventReminderMin} menit sebelumnya` : ''}.
+              </p>
+              <Button
+                variant="primary"
+                icon={CalendarPlus}
+                className="w-full"
+                onClick={async () => {
+                  const r = await exportCalendar()
+                  if (r === 'downloaded') toast({ text: 'File kalender diunduh.', tone: 'success' })
+                }}
+              >
+                Kirim jadwal ke kalender HP
+              </Button>
+              <ol className="list-inside list-decimal space-y-1.5">
+                <li>
+                  <b className="text-ink">iPhone / Samsung Calendar:</b> buka file .ics → <i>Tambahkan semua</i>. Alarmnya ikut.
+                </li>
+                <li>
+                  <b className="text-ink">Google Calendar</b> (sekali saja): di laptop buka calendar.google.com → Setelan → <i>Tambahkan kalender → Buat kalender baru</i> “Ritme” → di
+                  setelannya atur <i>Notifikasi acara</i> ke <b className="text-ink">0 menit</b> (Google mengabaikan alarm di file, jadi pakai notifikasi bawaan kalender ini).
+                </li>
+                <li>
+                  Lalu <i>Setelan → Impor & ekspor → Impor</i> → pilih file → masukkan ke kalender “Ritme”. HP kamu akan berbunyi di setiap pergantian kegiatan.
+                </li>
+              </ol>
+              <p className="text-xs text-faint">Ekspornya satu arah: kirim ulang setiap selesai menyusun jadwal (mis. tiap malam setelah Rencana besok).</p>
+            </div>
+          </details>
           <div className="space-y-1.5">
             <span className="text-[13px] font-medium text-muted">Pengingat rencana besok mulai jam</span>
             <div className="flex flex-wrap gap-2">

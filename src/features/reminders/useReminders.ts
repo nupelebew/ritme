@@ -5,7 +5,8 @@ import { eventsForDate } from '@/db/events'
 import { useSettings } from '@/db/settings'
 import type { DateKey } from '@/db/types'
 import { nowMinutes, shiftKey, todayKey } from '@/lib/date'
-import { canNotify, showLocalNotification } from '@/lib/notify'
+import { canNotify, chime, showLocalNotification } from '@/lib/notify'
+import { useToast } from '@/components/Toast'
 import { dueReminders } from '@/lib/reminders'
 
 const SENT_KEY = 'ritme-sent'
@@ -61,10 +62,13 @@ function saveSent(today: DateKey, sent: Set<string>) {
 export function useReminders() {
   const s = useSettings()
   useEffect(() => {
-    if (!s.notifications) return
     let busy = false
     const run = async () => {
-      if (busy || notifyStatus() !== 'granted') return
+      if (busy) return
+      const notify = s.notifications && notifyStatus() === 'granted'
+      const visible = document.visibilityState === 'visible'
+      // Tanpa izin notifikasi, pengingat tetap jalan selama Ritme terbuka (bunyi + pesan di layar)
+      if (!notify && !visible) return
       busy = true
       try {
         const today = todayKey()
@@ -74,12 +78,20 @@ export function useReminders() {
           nowMin: nowMinutes(),
           events: await eventsForDate(db, today),
           leadMin: s.eventReminderMin,
+          atStart: s.blockAlerts,
           eveningHour: s.eveningReminderHour,
           tomorrowPlanned: await hasPlanFor(shiftKey(today, 1)),
           sent,
         })
         for (const r of due) {
-          await showLocalNotification(r.title, r.body, r.id)
+          const alarm = r.kind === 'start'
+          if (visible) {
+            // Di layar: bunyi "ting" + pesan, supaya terasa walau notifikasi sistem disembunyikan
+            if (r.kind !== 'evening') chime(alarm ? 'focus' : 'break')
+            if (alarm) navigator.vibrate?.([200, 100, 200])
+            window.dispatchEvent(new CustomEvent('ritme:reminder', { detail: r }))
+          }
+          if (notify) await showLocalNotification(r.title, r.body, r.id, { alarm })
           sent.add(r.id)
         }
         if (due.length) saveSent(today, sent)
@@ -88,11 +100,26 @@ export function useReminders() {
       }
     }
     void run()
-    const id = setInterval(run, 30_000)
+    // Cek tiap 20 detik supaya pergantian blok terasa tepat waktu
+    const id = setInterval(run, 20_000)
     document.addEventListener('visibilitychange', run)
     return () => {
       clearInterval(id)
       document.removeEventListener('visibilitychange', run)
     }
-  }, [s.notifications, s.eventReminderMin, s.eveningReminderHour])
+  }, [s.notifications, s.eventReminderMin, s.eveningReminderHour, s.blockAlerts])
+}
+
+/** Dipasang di dalam ToastProvider: tampilkan pengingat sebagai pesan di layar saat Ritme terbuka */
+export function ReminderToasts() {
+  const toast = useToast()
+  useEffect(() => {
+    const on = (e: Event) => {
+      const r = (e as CustomEvent<{ title: string; body: string }>).detail
+      toast({ text: `🔔 ${r.title} — ${r.body}` })
+    }
+    window.addEventListener('ritme:reminder', on)
+    return () => window.removeEventListener('ritme:reminder', on)
+  }, [toast])
+  return null
 }

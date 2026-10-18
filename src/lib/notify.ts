@@ -43,12 +43,19 @@ export function chime(kind: 'focus' | 'break' = 'focus') {
 export const canNotify = () => typeof Notification !== 'undefined'
 
 /** Notifikasi lokal lewat service worker (lebih andal di Android), cadangan: Notification biasa */
-export async function showLocalNotification(title: string, body: string, tag = 'ritme') {
+export async function showLocalNotification(title: string, body: string, tag = 'ritme', opts: { alarm?: boolean } = {}) {
   if (!canNotify() || Notification.permission !== 'granted') return false
   try {
     const reg = await navigator.serviceWorker?.getRegistration()
     if (reg) {
-      await reg.showNotification(title, { body, tag, icon: 'pwa-192x192.png', badge: 'pwa-64x64.png' })
+      await reg.showNotification(title, {
+        body,
+        tag,
+        icon: 'pwa-192x192.png',
+        badge: 'pwa-64x64.png',
+        // Alarm kecil: getar & tetap tampil sampai diketuk (bila didukung)
+        ...(opts.alarm ? ({ vibrate: [250, 120, 250, 120, 400], requireInteraction: true, renotify: true } as object) : {}),
+      })
       return true
     }
     new Notification(title, { body, tag, icon: 'pwa-192x192.png' })

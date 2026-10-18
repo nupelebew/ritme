@@ -58,5 +58,18 @@ describe('ekspor kalender (.ics)', () => {
     expect(ics).toContain('DTSTART;VALUE=DATE:20241102')
     expect(ics).toContain('RRULE:FREQ=YEARLY')
     expect(ics.split('\r\n').every((l) => new TextEncoder().encode(l).length <= 75)).toBe(true)
+    // bawaan: alarm tepat saat mulai di tiap kegiatan
+    expect(ics.match(/TRIGGER:PT0M/g)).toHaveLength(3)
+    expect(ics).toContain('DESCRIPTION:Sekarang: Begadang')
+    expect(ics).toContain('TRIGGER:PT8H')
+  })
+
+  it('alarm bisa diatur: sebelum & saat mulai, atau dimatikan', () => {
+    const ev: ScheduleEvent[] = [{ id: 'x', title: 'Sarapan', categoryId: 'rumah', date: '2026-10-19', start: 420, end: 450, createdAt: 0 }]
+    const both = buildICS(ev, new Map(), [], { alarmBeforeMin: 10 })
+    expect(both).toContain('TRIGGER:-PT10M')
+    expect(both).toContain('TRIGGER:PT0M')
+    const none = buildICS(ev, new Map(), [], { alarmAtStart: false })
+    expect(none).not.toContain('BEGIN:VALARM')
   })
 })
