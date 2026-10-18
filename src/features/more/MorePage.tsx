@@ -1,6 +1,7 @@
 import { Link } from 'react-router'
 import {
   BarChart3,
+  Briefcase,
   CalendarDays,
   ChevronRight,
   GraduationCap,
@@ -17,7 +18,10 @@ import { PageHeader } from '@/components/ui'
 const groups: { title: string; items: { to: string; label: string; desc: string; icon: LucideIcon; tint: string }[] }[] = [
   {
     title: 'Proyek',
-    items: [{ to: '/skripsi', label: 'Skripsi', desc: 'Milestone, log bimbingan, hitung mundur sidang', icon: GraduationCap, tint: '#8b5cf6' }],
+    items: [
+      { to: '/skripsi', label: 'Skripsi', desc: 'Milestone, log bimbingan, hitung mundur sidang', icon: GraduationCap, tint: '#8b5cf6' },
+      { to: '/freelance', label: 'Freelance', desc: 'Klien, jam tertagih, invoice', icon: Briefcase, tint: '#0891b2' },
+    ],
   },
   {
     title: 'Rencanakan',

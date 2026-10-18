@@ -36,6 +36,7 @@ export function TaskSheet({ task, initial, onClose }: { task?: Task; initial?: P
   const [newSub, setNewSub] = useState('')
   const [breakdown, setBreakdown] = useState(false)
   const milestones = useLiveQuery(() => db.milestones.orderBy('order').filter((m) => !m.done || m.id === task?.milestoneId).toArray(), [task?.milestoneId]) ?? []
+  const clients = useLiveQuery(() => db.clients.filter((c) => !c.archived || c.id === task?.clientId).toArray(), [task?.clientId]) ?? []
   const set = (p: Partial<Draft>) => setT((x) => ({ ...x, ...p }))
 
   // Tugas yang sudah ada: simpan otomatis
@@ -178,6 +179,21 @@ export function TaskSheet({ task, initial, onClose }: { task?: Task; initial?: P
               {milestones.map((m) => (
                 <Chip key={m.id} active={t.milestoneId === m.id} onClick={() => set({ milestoneId: m.id })}>
                   {m.title}
+                </Chip>
+              ))}
+            </div>
+          </div>
+        )}
+        {clients.length > 0 && (
+          <div className="space-y-1.5">
+            <span className="text-[13px] font-medium text-muted">Klien freelance</span>
+            <div className="scroll-thin -mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+              <Chip active={!t.clientId} onClick={() => set({ clientId: undefined })}>
+                Tidak ada
+              </Chip>
+              {clients.map((c) => (
+                <Chip key={c.id} color={c.color} active={t.clientId === c.id} onClick={() => set({ clientId: c.id })}>
+                  {c.name}
                 </Chip>
               ))}
             </div>
