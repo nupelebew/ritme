@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { CalendarPlus, Check, Plus, Trash2, X } from 'lucide-react'
+import { CalendarPlus, Check, Plus, Timer, Trash2, X } from 'lucide-react'
+import { useNavigate } from 'react-router'
+import { focusStore } from '@/features/focus/focus'
 import { Button, Chip, Field, IconButton, Sheet } from '@/components/ui'
 import { useToast } from '@/components/Toast'
 import { db, uid } from '@/db/db'
@@ -15,6 +17,7 @@ type Draft = Omit<Task, 'id' | 'createdAt' | 'done'> & Partial<Pick<Task, 'id' |
 
 export function TaskSheet({ task, initial, onClose }: { task?: Task; initial?: Partial<Draft>; onClose: () => void }) {
   const toast = useToast()
+  const navigate = useNavigate()
   const settings = useSettings()
   const { list: categories } = useCategories()
   const today = todayKey()
@@ -129,6 +132,20 @@ export function TaskSheet({ task, initial, onClose }: { task?: Task; initial?: P
             onKeyDown={(e) => e.key === 'Enter' && !task && create()}
           />
         </Field>
+        {task && !t.done && (
+          <Button
+            size="sm"
+            icon={Timer}
+            className="-mt-2"
+            onClick={async () => {
+              await close()
+              focusStore.setTarget({ taskId: task.id, categoryId: t.categoryId })
+              navigate('/fokus')
+            }}
+          >
+            Fokuskan tugas ini
+          </Button>
+        )}
 
         <div className="space-y-1.5">
           <span className="text-[13px] font-medium text-muted">Kategori</span>

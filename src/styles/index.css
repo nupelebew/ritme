@@ -255,3 +255,11 @@ select {
 .animate-pop {
   animation: pop 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
+
+@keyframes breathe {
+  0%, 100% { transform: scale(0.92); }
+  50% { transform: scale(1.08); }
+}
+.animate-breathe {
+  animation: breathe 5s ease-in-out infinite;
+}

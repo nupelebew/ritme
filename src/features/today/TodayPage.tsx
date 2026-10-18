@@ -10,6 +10,7 @@ import { useCategories } from '@/db/hooks'
 import { useSettings } from '@/db/settings'
 import type { DateKey, Task } from '@/db/types'
 import { HabitStrip } from '@/features/habits/HabitStrip'
+import { totalMin, useSessionsOn } from '@/features/focus/useSessions'
 import { TaskSheet } from '@/features/tasks/TaskSheet'
 import { TopThree } from '@/features/tasks/TopThree'
 import { useTasks, useToggleTask } from '@/features/tasks/useTasks'
@@ -38,6 +39,7 @@ export function TodayPage() {
   const [editing, setEditing] = useState<Occurrence | null>(null)
   const [draft, setDraft] = useState<EventDraft | null>(null)
   const tasks = useTasks()
+  const sessions = useSessionsOn(date)
   const toggleTask = useToggleTask()
   const [openTask, setOpenTask] = useState<Task | null>(null)
 
@@ -86,6 +88,7 @@ export function TodayPage() {
           startHour={startHour}
           endHour={endHour}
           nowMin={nowMin}
+          focusMin={totalMin(sessions ?? [])}
         />
       )}
 

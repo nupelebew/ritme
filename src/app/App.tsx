@@ -7,6 +7,8 @@ import { ToastProvider } from '@/components/Toast'
 import { TodayPage } from '@/features/today/TodayPage'
 import { TasksPage } from '@/features/tasks/TasksPage'
 import { FocusPage } from '@/features/focus/FocusPage'
+import { FocusPill } from '@/features/focus/FocusPill'
+import { useFocusEngine } from '@/features/focus/focus'
 import { HabitsPage } from '@/features/habits/HabitsPage'
 import { MorePage } from '@/features/more/MorePage'
 import { PlanPage } from '@/features/plan/PlanPage'
@@ -18,6 +20,7 @@ import { SettingsPage } from '@/features/settings/SettingsPage'
 
 export function App() {
   useApplyTheme()
+  useFocusEngine()
   const { pathname } = useLocation()
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -33,6 +36,7 @@ export function App() {
       </div>
       <div className="grain" aria-hidden />
       <UpdatePrompt />
+      <FocusPill />
       <main className="mx-auto min-h-dvh w-full max-w-2xl px-4 pb-32 pt-safe">
         <Routes>
           <Route path="/" element={<TodayPage />} />

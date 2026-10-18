@@ -14,12 +14,14 @@ export function DaySummary({
   startHour,
   endHour,
   nowMin,
+  focusMin = 0,
 }: {
   items: Occurrence[]
   categories: Map<string, Category>
   startHour: number
   endHour: number
   nowMin?: number
+  focusMin?: number
 }) {
   const base = startHour * 60
   const span = (endHour - startHour) * 60
@@ -84,6 +86,11 @@ export function DaySummary({
           <div>
             <div className="font-display text-xl font-semibold leading-none">{total ? durationLabel(total) : '–'}</div>
             <div className="mt-1 text-[11px] text-muted">terjadwal</div>
+            {focusMin > 0 && (
+              <div className="mt-1.5 text-[11px] font-semibold text-accent-2" title="Total sesi fokus tercatat">
+                ⏱ {durationLabel(focusMin)} fokus
+              </div>
+            )}
           </div>
         </div>
       </div>
