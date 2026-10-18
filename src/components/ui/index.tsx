@@ -1,6 +1,17 @@
 import { useEffect, useRef, type ButtonHTMLAttributes, type HTMLAttributes, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { X, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/cn'
+
+/** Tombol aksi melayang di atas navigasi bawah (dirender ke body supaya posisinya selalu relatif ke layar) */
+export function Fab({ className, ...p }: ButtonProps) {
+  return createPortal(
+    <div className="pointer-events-none fixed inset-x-0 bottom-[104px] z-30 mx-auto flex max-w-2xl justify-end px-4">
+      <Button variant="primary" className={cn('pointer-events-auto min-h-13 rounded-full px-5 shadow-xl', className)} {...p} />
+    </div>,
+    document.body,
+  )
+}
 
 export function Card({ className, ...p }: HTMLAttributes<HTMLDivElement>) {
   return <div className={cn('glass rounded-3xl p-4', className)} {...p} />
@@ -126,7 +137,7 @@ export function Sheet({
     }
   }, [open, onClose])
   if (!open) return null
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center" role="presentation">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fade" onClick={onClose} />
       <div
@@ -140,10 +151,11 @@ export function Sheet({
           <h2 className="font-display text-lg font-semibold">{title}</h2>
           <IconButton icon={X} label="Tutup" onClick={onClose} className="-mr-2" />
         </div>
-        <div className="scroll-thin flex-1 overflow-y-auto px-5 pb-4 pt-2">{children}</div>
+        <div className="scroll-thin flex-1 overflow-y-auto overflow-x-hidden px-5 pb-4 pt-2">{children}</div>
         {footer && <div className="flex gap-2 border-t border-line px-5 pb-safe pt-3">{footer}</div>}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 
