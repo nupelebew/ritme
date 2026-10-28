@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { dueReminders, showEveningBanner } from './reminders'
+import { dueReminders, plannedReminders, showEveningBanner } from './reminders'
 
 const base = {
   today: '2026-10-18',
@@ -53,5 +53,28 @@ describe('pengingat', () => {
     expect(showEveningBanner(21 * 60, 20, true, false)).toBe(false)
     expect(showEveningBanner(21 * 60, 20, false, true)).toBe(false)
     expect(showEveningBanner(18 * 60, 20, false, false)).toBe(false)
+  })
+})
+
+describe('pengingat terjadwal (aplikasi Android)', () => {
+  const { sent: _s, ...input } = base
+
+  it('menghitung jam muncul tiap pengingat, urut waktu', () => {
+    const r = plannedReminders(input)
+    expect(r.map((x) => [x.id, x.atMin])).toEqual([
+      ['pre:2026-10-18:a', 410],
+      ['start:2026-10-18:a', 420],
+      ['pre:2026-10-18:b', 440],
+      ['start:2026-10-18:b', 450],
+      ['pre:2026-10-18:c', 1130],
+      ['start:2026-10-18:c', 1140],
+    ])
+    expect(r[0].body).toBe('Mulai 07:00 (10 menit lagi).')
+    expect(r[3].body).toBe('07:30–09:30 · berikutnya 19:00 Makan malam')
+  })
+
+  it('pengingat malam hanya bila besok belum direncanakan; opsi mati dihormati', () => {
+    expect(plannedReminders({ ...input, tomorrowPlanned: false }).at(-1)).toMatchObject({ id: 'evening:2026-10-18', atMin: 1200 })
+    expect(plannedReminders({ ...input, leadMin: 0, atStart: false })).toEqual([])
   })
 })

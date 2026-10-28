@@ -1,3 +1,5 @@
+import { isNative, showNativeNow } from './nativeNotify'
+
 let ctx: AudioContext | undefined
 
 /** AudioContext bersama (bunyi notifikasi & suara latar) */
@@ -44,6 +46,14 @@ export const canNotify = () => typeof Notification !== 'undefined'
 
 /** Notifikasi lokal lewat service worker (lebih andal di Android), cadangan: Notification biasa */
 export async function showLocalNotification(title: string, body: string, tag = 'ritme', opts: { alarm?: boolean } = {}) {
+  if (isNative()) {
+    try {
+      await showNativeNow(title, body)
+      return true
+    } catch {
+      return false
+    }
+  }
   if (!canNotify() || Notification.permission !== 'granted') return false
   try {
     const reg = await navigator.serviceWorker?.getRegistration()

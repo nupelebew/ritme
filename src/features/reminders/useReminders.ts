@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/db/db'
 import { eventsForDate } from '@/db/events'
-import { useSettings } from '@/db/settings'
+import { getSettings, useSettings } from '@/db/settings'
 import type { DateKey } from '@/db/types'
-import { nowMinutes, shiftKey, todayKey } from '@/lib/date'
+import { nowMinutes, shiftKey, toKey, todayKey } from '@/lib/date'
 import { canNotify, chime, showLocalNotification } from '@/lib/notify'
 import { useToast } from '@/components/Toast'
-import { dueReminders } from '@/lib/reminders'
+import { dueReminders, plannedReminders, type PlannedReminder } from '@/lib/reminders'
+import { clearNativeReminders, isNative, nativePermission, replaceNativeReminders, type NativePerm } from '@/lib/nativeNotify'
+import { useNow } from '@/lib/useNow'
 
 const SENT_KEY = 'ritme-sent'
 
@@ -22,7 +24,19 @@ export function useTomorrowPlanned() {
 }
 
 export type NotifyStatus = 'unsupported' | 'default' | 'denied' | 'granted'
+
+/** Izin notifikasi aplikasi Android (dibaca async, disimpan di sini supaya notifyStatus tetap sinkron) */
+let nativePerm: NativePerm = 'default'
+export async function refreshNativePermission() {
+  if (isNative()) nativePerm = await nativePermission()
+  return nativePerm
+}
+export function setNativePermission(p: NativePerm) {
+  nativePerm = p
+}
+
 export function notifyStatus(): NotifyStatus {
+  if (isNative()) return nativePerm
   return canNotify() ? (Notification.permission as NotifyStatus) : 'unsupported'
 }
 
@@ -31,7 +45,8 @@ export function useNotificationsActive() {
   const s = useSettings()
   const [status, setStatus] = useState(notifyStatus)
   useEffect(() => {
-    const onVis = () => setStatus(notifyStatus())
+    const onVis = () => void refreshNativePermission().then(() => setStatus(notifyStatus()))
+    onVis()
     document.addEventListener('visibilitychange', onVis)
     return () => document.removeEventListener('visibilitychange', onVis)
   }, [])
@@ -58,6 +73,7 @@ function saveSent(today: DateKey, sent: Set<string>) {
  * Penjadwal pengingat lokal. Dipasang sekali di App.
  * Catatan: PWA tanpa server push hanya bisa memberi notifikasi selama aplikasi masih hidup
  * (terbuka atau di latar belakang). Saat ditutup total, banner malam jadi cadangannya.
+ * Di aplikasi Android, notifikasi sistem diurus useNativeReminders; di sini tinggal bunyi & pesan di layar.
  */
 export function useReminders() {
   const s = useSettings()
@@ -65,7 +81,7 @@ export function useReminders() {
     let busy = false
     const run = async () => {
       if (busy) return
-      const notify = s.notifications && notifyStatus() === 'granted'
+      const notify = s.notifications && notifyStatus() === 'granted' && !isNative()
       const visible = document.visibilityState === 'visible'
       // Tanpa izin notifikasi, pengingat tetap jalan selama Ritme terbuka (bunyi + pesan di layar)
       if (!notify && !visible) return
@@ -109,6 +125,59 @@ export function useReminders() {
     }
   }, [s.notifications, s.eventReminderMin, s.eveningReminderHour, s.blockAlerts])
 }
+
+/** Berapa hari ke depan pengingat dipasang ke sistem; diperbarui lagi tiap Ritme dibuka */
+const NATIVE_DAYS = 3
+
+/**
+ * Aplikasi Android: pasang semua pengingat beberapa hari ke depan sebagai alarm sistem,
+ * jadi tetap muncul walau Ritme ditutup. Dipasang ulang otomatis setiap jadwal/pengaturan berubah.
+ */
+export function useNativeReminders() {
+  const today = toKey(useNow(60_000))
+  const plan = useLiveQuery(async () => {
+    if (!isNative()) return null
+    const s = await getSettings()
+    if (!s.notifications) return { on: false as const }
+    const list: PlannedReminder[] = []
+    for (let d = 0; d < NATIVE_DAYS; d++) {
+      const date = shiftKey(today, d)
+      list.push(
+        ...plannedReminders({
+          today: date,
+          events: await eventsForDate(db, date),
+          leadMin: s.eventReminderMin,
+          atStart: s.blockAlerts,
+          eveningHour: s.eveningReminderHour,
+          tomorrowPlanned: await hasPlanFor(shiftKey(date, 1)),
+        }),
+      )
+    }
+    return { on: true as const, list }
+  }, [today])
+
+  const [perm, setPerm] = useState<NativePerm>('default')
+  useEffect(() => {
+    if (!isNative()) return
+    const onVis = () => void refreshNativePermission().then(setPerm)
+    onVis()
+    document.addEventListener('visibilitychange', onVis)
+    return () => document.removeEventListener('visibilitychange', onVis)
+  }, [])
+
+  const key = plan ? JSON.stringify([perm, plan]) : ''
+  useEffect(() => {
+    if (!plan) return
+    // Antre supaya pemasangan ulang tidak saling tumpang tindih
+    queue = queue
+      .then(async () => {
+        if (plan.on && perm === 'granted') await replaceNativeReminders(plan.list)
+        else await clearNativeReminders()
+      })
+      .catch(() => undefined)
+  }, [key])
+}
+let queue: Promise<void> = Promise.resolve()
 
 /** Dipasang di dalam ToastProvider: tampilkan pengingat sebagai pesan di layar saat Ritme terbuka */
 export function ReminderToasts() {

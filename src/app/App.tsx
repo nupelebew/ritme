@@ -10,7 +10,7 @@ import { TasksPage } from '@/features/tasks/TasksPage'
 import { FocusPage } from '@/features/focus/FocusPage'
 import { FocusPill } from '@/features/focus/FocusPill'
 import { useFocusEngine } from '@/features/focus/focus'
-import { ReminderToasts, useReminders } from '@/features/reminders/useReminders'
+import { ReminderToasts, useNativeReminders, useReminders } from '@/features/reminders/useReminders'
 import { useAgenda } from '@/features/reminders/useAgenda'
 import { ShareSheet } from '@/features/share/ShareSheet'
 import { BadgeWatcher } from '@/features/badges/useAchievements'
@@ -39,6 +39,7 @@ export function App() {
   useApplyTheme()
   useFocusEngine()
   useReminders()
+  useNativeReminders()
   useAgenda()
   const { pathname } = useLocation()
   useEffect(() => {

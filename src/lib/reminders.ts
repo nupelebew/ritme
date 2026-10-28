@@ -37,20 +37,60 @@ export function dueReminders(i: ReminderInput): Reminder[] {
       out.push({ id: pre, kind: 'pre', title: `${e.title} sebentar lagi`, body: `Mulai ${minToHHMM(e.start)} (${until} menit lagi).` })
 
     const start = `start:${i.today}:${e.key}`
-    if (i.atStart && until <= 0 && until >= -START_GRACE && !i.sent.has(start)) {
-      const next = events.slice(k + 1).find((x) => x.start >= e.end) ?? events.slice(k + 1).find((x) => x.start > e.start)
-      out.push({
-        id: start,
-        kind: 'start',
-        title: `Sekarang: ${e.title}`,
-        body: `${minToHHMM(e.start)}–${minToHHMM(e.end)}${next ? ` · berikutnya ${minToHHMM(next.start)} ${next.title}` : ' · ini kegiatan terakhir hari ini'}`,
-      })
-    }
+    if (i.atStart && until <= 0 && until >= -START_GRACE && !i.sent.has(start)) out.push(startReminder(i.today, events, k))
   })
   const eveningId = `evening:${i.today}`
-  if (i.nowMin >= i.eveningHour * 60 && !i.tomorrowPlanned && !i.sent.has(eveningId))
-    out.push({ id: eveningId, kind: 'evening', title: 'Besok mau ngapain?', body: 'Luangkan 5 menit untuk brain dump dan susun rencana besok.' })
+  if (i.nowMin >= i.eveningHour * 60 && !i.tomorrowPlanned && !i.sent.has(eveningId)) out.push(eveningReminder(i.today))
   return out
+}
+
+type Ev = ReminderInput['events'][number]
+
+function startReminder(today: DateKey, events: Ev[], k: number): Reminder {
+  const e = events[k]
+  const next = events.slice(k + 1).find((x) => x.start >= e.end) ?? events.slice(k + 1).find((x) => x.start > e.start)
+  return {
+    id: `start:${today}:${e.key}`,
+    kind: 'start',
+    title: `Sekarang: ${e.title}`,
+    body: `${minToHHMM(e.start)}–${minToHHMM(e.end)}${next ? ` · berikutnya ${minToHHMM(next.start)} ${next.title}` : ' · ini kegiatan terakhir hari ini'}`,
+  }
+}
+
+const eveningReminder = (today: DateKey): Reminder => ({
+  id: `evening:${today}`,
+  kind: 'evening',
+  title: 'Besok mau ngapain?',
+  body: 'Luangkan 5 menit untuk brain dump dan susun rencana besok.',
+})
+
+export interface PlannedReminder extends Reminder {
+  date: DateKey
+  /** Menit sejak tengah malam pada `date` saat notifikasi harus muncul */
+  atMin: number
+}
+
+/**
+ * Semua pengingat satu hari beserta jam munculnya, untuk dijadwalkan sekaligus ke sistem
+ * (aplikasi Android): tetap muncul walau Ritme sudah ditutup.
+ */
+export function plannedReminders(i: Omit<ReminderInput, 'nowMin' | 'sent'>): PlannedReminder[] {
+  const out: PlannedReminder[] = []
+  const events = [...i.events].sort((a, b) => a.start - b.start)
+  events.forEach((e, k) => {
+    if (i.leadMin > 0 && e.start - i.leadMin >= 0)
+      out.push({
+        id: `pre:${i.today}:${e.key}`,
+        kind: 'pre',
+        title: `${e.title} sebentar lagi`,
+        body: `Mulai ${minToHHMM(e.start)} (${i.leadMin} menit lagi).`,
+        date: i.today,
+        atMin: e.start - i.leadMin,
+      })
+    if (i.atStart) out.push({ ...startReminder(i.today, events, k), date: i.today, atMin: e.start })
+  })
+  if (!i.tomorrowPlanned) out.push({ ...eveningReminder(i.today), date: i.today, atMin: i.eveningHour * 60 })
+  return out.sort((a, b) => a.atMin - b.atMin)
 }
 
 /** Banner malam: tampil bila sudah lewat jam pengingat, besok belum ada rencana, dan belum ditutup hari ini */

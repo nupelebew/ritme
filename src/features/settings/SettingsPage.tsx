@@ -9,7 +9,8 @@ import { DEFAULT_ABOUT, setSetting, useSettings, type AccentId, type Settings } 
 import { showLocalNotification } from '@/lib/notify'
 import { isIOS, useInstall } from '@/lib/install'
 import { cn } from '@/lib/cn'
-import { useNotificationsActive } from '@/features/reminders/useReminders'
+import { setNativePermission, useNotificationsActive } from '@/features/reminders/useReminders'
+import { exactAlarmAllowed, isNative, openExactAlarmSetting, requestNativePermission } from '@/lib/nativeNotify'
 import { BackupCard } from './BackupCard'
 import { exportCalendar } from '@/db/calendar'
 import { createLock, lockFlag, lockSupported, markUnlocked, verifyLock } from '@/lib/appLock'
@@ -64,11 +65,26 @@ export function SettingsPage() {
   useEffect(() => {
     void periodicSyncSupported().then(setBgSync)
   }, [])
+  // Android 12+: tanpa izin "Alarm & pengingat", notifikasi bisa telat beberapa menit
+  const [exactOk, setExactOk] = useState(true)
+  useEffect(() => {
+    if (!isNative()) return
+    const check = () => void exactAlarmAllowed().then(setExactOk)
+    check()
+    document.addEventListener('visibilitychange', check)
+    return () => document.removeEventListener('visibilitychange', check)
+  }, [])
 
   const enableNotifications = async () => {
     if (notif.status === 'unsupported') return
-    let perm = Notification.permission
-    if (perm === 'default') perm = await Notification.requestPermission()
+    let perm: string
+    if (isNative()) {
+      perm = await requestNativePermission()
+      setNativePermission(perm as 'granted')
+    } else {
+      perm = Notification.permission
+      if (perm === 'default') perm = await Notification.requestPermission()
+    }
     notif.refresh()
     if (perm === 'granted') {
       await setSetting('notifications', true)
@@ -82,8 +98,12 @@ export function SettingsPage() {
         ? 'Di iPhone/iPad, notifikasi hanya tersedia setelah Ritme dipasang ke layar utama (iOS 16.4+).'
         : 'Browser ini tidak mendukung notifikasi. Ritme akan menampilkan banner saat dibuka malam hari.'
       : notif.status === 'denied'
-        ? 'Izin ditolak. Buka pengaturan situs di browser → Notifikasi → Izinkan, lalu kembali ke sini.'
-        : 'Notifikasi dikirim selama Ritme terbuka atau masih berjalan di latar. Kalau aplikasi ditutup total, banner malam jadi pengingatnya.'
+        ? isNative()
+          ? 'Izin ditolak. Buka Pengaturan HP → Aplikasi → Ritme → Notifikasi → Izinkan, lalu kembali ke sini.'
+          : 'Izin ditolak. Buka pengaturan situs di browser → Notifikasi → Izinkan, lalu kembali ke sini.'
+        : isNative()
+          ? 'Pengingat dipasang sebagai alarm di HP, jadi tetap muncul walau Ritme ditutup. Buka Ritme minimal sekali tiap 3 hari supaya jadwalnya diperbarui.'
+          : 'Notifikasi dikirim selama Ritme terbuka atau masih berjalan di latar. Kalau aplikasi ditutup total, banner malam jadi pengingatnya.'
 
   return (
     <div className="animate-rise space-y-6">
@@ -218,10 +238,20 @@ export function SettingsPage() {
                   </Button>
                 </>
               ) : (
-                <Button size="sm" variant="primary" icon={BellRing} onClick={enableNotifications} disabled={notif.status === 'denied'}>
+                <Button size="sm" variant="primary" icon={BellRing} onClick={enableNotifications} disabled={notif.status === 'denied' && !isNative()}>
                   Aktifkan notifikasi
                 </Button>
               )}
+            </div>
+          )}
+          {isNative() && notif.active && !exactOk && (
+            <div className="space-y-2 rounded-2xl border border-accent/40 bg-accent/10 p-3 text-[13px] text-muted">
+              <p>
+                Supaya bunyi <b className="text-ink">tepat waktu</b>, izinkan Ritme memakai “Alarm &amp; pengingat”. Tanpa izin ini notifikasi tetap muncul, tapi bisa telat beberapa menit.
+              </p>
+              <Button size="sm" variant="primary" icon={AlarmClock} onClick={openExactAlarmSetting}>
+                Buka pengaturan alarm
+              </Button>
             </div>
           )}
           <div className="space-y-1.5">
@@ -240,6 +270,7 @@ export function SettingsPage() {
             checked={s.blockAlerts}
             onChange={(v) => setSetting('blockAlerts', v)}
           />
+          {!isNative() && (
           <details className="group rounded-2xl border border-accent/40 bg-accent/10 p-3">
             <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 text-sm font-semibold">
               <AlarmClock className="size-5 shrink-0 text-accent" aria-hidden />
@@ -278,6 +309,7 @@ export function SettingsPage() {
               <p className="text-xs text-faint">Ekspornya satu arah: kirim ulang setiap selesai menyusun jadwal (mis. tiap malam setelah Rencana besok).</p>
             </div>
           </details>
+          )}
           <div className="space-y-1.5">
             <span className="text-[13px] font-medium text-muted">Pengingat rencana besok mulai jam</span>
             <div className="flex flex-wrap gap-2">
